@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Mail, Lock, Building2, ShieldCheck, UserCheck, ArrowRight, CheckCircle2, Sparkles } from 'lucide-react';
+import { Mail, Lock, Building2, ShieldCheck, UserCheck, ArrowRight, CheckCircle2, Sparkles, Users, CreditCard } from 'lucide-react';
 import { UserSession } from '@/types';
 
 interface AdminAuthPageProps {
@@ -106,7 +106,33 @@ export default function AdminAuthPage({ onLoginSuccess }: AdminAuthPageProps) {
 
   return (
     <div className="min-h-screen w-full bg-[#f8fafc] flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8">
-      {/* Top Notification Bar for Demo */}
+      {/* Portal Switcher & Top Notification Bar */}
+      <div className="mb-4 w-full max-w-4xl bg-white rounded-2xl p-3 border border-slate-200/90 shadow-sm flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div className="flex items-center gap-2">
+          <span className="font-bold text-slate-700">MultiCredit 360 Portals:</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="px-3 py-1.5 rounded-xl bg-blue-600 text-white font-bold flex items-center gap-1.5 shadow-sm">
+            <ShieldCheck className="w-3.5 h-3.5" />
+            <span>Admin Portal (Active)</span>
+          </span>
+          <a
+            href="/agent/login"
+            className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold transition flex items-center gap-1.5"
+          >
+            <Users className="w-3.5 h-3.5 text-indigo-600" />
+            <span>Agent Portal</span>
+          </a>
+          <a
+            href="/customer/login"
+            className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold transition flex items-center gap-1.5"
+          >
+            <CreditCard className="w-3.5 h-3.5 text-blue-600" />
+            <span>Customer Portal</span>
+          </a>
+        </div>
+      </div>
+
       <div className="mb-6 w-full max-w-4xl bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-600 rounded-2xl p-3 sm:p-4 text-white shadow-lg flex flex-col sm:flex-row items-center justify-between gap-3 text-sm">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center shrink-0">

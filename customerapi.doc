@@ -1,0 +1,500 @@
+# MultiCredit 360 - Complete Customer API Documentation (customerapi.doc)
+**Version:** 2.4.0  
+**Base URL:** `http://localhost:3000` (or production domain)  
+**Content-Type:** `application/json`
+
+---
+
+## 📑 Table of Contents
+1. [Authentication APIs](#1-authentication-apis)
+   - [Customer Signup](#11-customer-signup)
+   - [Customer Login](#12-customer-login)
+2. [Customer Profile & Data APIs](#2-customer-profile--data-apis)
+   - [Get Customer Full Dashboard Data](#21-get-customer-full-dashboard-data)
+   - [Get All Customers (Admin/Staff)](#22-get-all-customers)
+   - [Create / Register Customer](#23-create-customer)
+3. [Schemes & Offers APIs (Admin Approved)](#3-schemes--offers-apis)
+   - [Get Active Loan, FD, RD, MIS Offers](#31-get-active-schemes)
+4. [Savings & Deposits APIs (FD / RD / MIS)](#4-savings--deposits-apis)
+   - [Get Customer Deposits](#41-get-deposits)
+   - [Open New Deposit Account (FD/RD/MIS)](#42-create-deposit-account)
+5. [Loan & Credit APIs](#5-loan--credit-apis)
+   - [Get Customer Loans](#51-get-loans)
+   - [Apply for New Loan / Daily Market Loan](#52-apply-loan)
+6. [Razorpay Payment Gateway & Auto Collection APIs](#6-razorpay-payment-gateway-apis)
+   - [Verify Online Payment & Auto Credit Agent Commission](#61-verify-razorpay-payment)
+7. [Collections & Passbook APIs](#7-collections--passbook-apis)
+   - [Get Collections / Receipts](#71-get-collections)
+   - [Create Collection Record](#72-create-collection-record)
+8. [Document Upload API (KYC)](#8-document-upload-api)
+   - [Upload PAN / Aadhaar Document](#81-upload-document)
+
+---
+
+## 1. Authentication APIs
+
+### 1.1 Customer Signup
+Register a new customer with personal details, PAN/Aadhaar document images, address, password, and optional referral code.
+
+- **Endpoint:** `POST /api/customer/auth/signup`
+- **Headers:** `Content-Type: application/json`
+
+#### Request Body:
+```json
+{
+  "name": "Md. Salim Ansari",
+  "mobile": "9876543210",
+  "email": "salim@example.com",
+  "password": "cust123",
+  "panNumber": "ABCDE1234F",
+  "panImage": "data:image/jpeg;base64,... (or image URL)",
+  "adhaarNumber": "2456 7890 1234",
+  "adhaarImage": "data:image/jpeg;base64,... (or image URL)",
+  "address": "14/B Park Circus, Kolkata",
+  "pincode": "700017",
+  "referralCode": "AGT-3601",
+  "type": "Loan",
+  "savingsBalance": 5000
+}
+```
+
+#### Response (200 OK):
+```json
+{
+  "success": true,
+  "message": "Customer signup successful!",
+  "data": {
+    "customer": {
+      "customerId": "CUS742",
+      "name": "Md. Salim Ansari",
+      "mobile": "9876543210",
+      "email": "salim@example.com",
+      "accountNumber": "MC360-9876543210",
+      "debitCardNumber": "5421 9876 5432 1026",
+      "debitCardExpiry": "09/31",
+      "debitCardCvv": "834",
+      "savingsBalance": 5000,
+      "kycStatus": "Verified",
+      "status": "Active",
+      "referralCode": "AGT-3601",
+      "documentsCount": 4
+    },
+    "token": "token_cust_1727239800000"
+  }
+}
+```
+
+---
+
+### 1.2 Customer Login
+Login to customer portal using Mobile Number, Email, Account Number, or Customer ID with password.
+
+- **Endpoint:** `POST /api/customer/auth/login`
+- **Headers:** `Content-Type: application/json`
+
+#### Request Body:
+```json
+{
+  "identifier": "9876543210",
+  "password": "cust123"
+}
+```
+*(Note: `identifier` can be mobile `9876543210`, email `salim@example.com`, or account no `MC360-9876543210`)*
+
+#### Response (200 OK):
+```json
+{
+  "success": true,
+  "data": {
+    "customer": {
+      "customerId": "CUS001",
+      "name": "Md. Salim Ansari",
+      "mobile": "9876543210",
+      "email": "salim@example.com",
+      "accountNumber": "MC360-9876543210",
+      "debitCardNumber": "5421 8812 9876 5432",
+      "debitCardExpiry": "09/31",
+      "debitCardCvv": "834",
+      "savingsBalance": 34500,
+      "kycStatus": "Verified"
+    },
+    "token": "jwt_cust_CUS001"
+  }
+}
+```
+
+---
+
+## 2. Customer Profile & Data APIs
+
+### 2.1 Get Customer Full Dashboard Data
+Fetch complete customer profile, Virtual Debit Card info, active Loans (including Daily Loan), Investments (FD/RD/MIS), Collection receipts, and Late Payment penalty chart.
+
+- **Endpoint:** `GET /api/customer/data?customerId=CUS001`
+- **Query Parameters:**
+  - `customerId` (optional): Customer ID, mobile number, or account number (defaults to logged-in customer)
+
+#### Response (200 OK):
+```json
+{
+  "success": true,
+  "data": {
+    "customer": {
+      "customerId": "CUS001",
+      "name": "Md. Salim Ansari",
+      "mobile": "9876543210",
+      "email": "salim@example.com",
+      "accountNumber": "MC360-9876543210",
+      "debitCardNumber": "5421 8812 9876 5432",
+      "debitCardExpiry": "09/31",
+      "debitCardCvv": "834",
+      "savingsBalance": 34500,
+      "panNumber": "ABCDE1234F",
+      "adhaarNumber": "2456 7890 1234",
+      "address": "14/B Park Circus, Kolkata",
+      "pincode": "700017",
+      "referralCode": "AGT-3601",
+      "kycStatus": "Verified"
+    },
+    "loans": [
+      {
+        "loanId": "LN001",
+        "customerName": "Md. Salim Ansari",
+        "loanType": "Personal Loan",
+        "amount": 50000,
+        "monthlyEmi": 2350,
+        "interestRate": 12,
+        "paidEmis": 4,
+        "totalEmis": 24,
+        "status": "Approved"
+      },
+      {
+        "loanId": "LN002",
+        "customerName": "Md. Salim Ansari",
+        "loanType": "Daily Loan",
+        "amount": 20000,
+        "dailyInstallment": 220,
+        "daysPaid": 32,
+        "daysTotal": 100,
+        "status": "Approved"
+      }
+    ],
+    "deposits": [
+      {
+        "accountId": "FD001",
+        "type": "FD",
+        "amount": 100000,
+        "interestRate": 8.5,
+        "tenureMonths": 36,
+        "maturityAmount": 128500,
+        "status": "Active"
+      },
+      {
+        "accountId": "MIS001",
+        "type": "MIS",
+        "amount": 200000,
+        "interestRate": 9.0,
+        "monthlyPayout": 1500,
+        "status": "Active"
+      }
+    ],
+    "collections": [
+      {
+        "receiptNo": "RC001",
+        "type": "EMI",
+        "amount": 2350,
+        "mode": "UPI",
+        "date": "18 Sep 2026"
+      }
+    ],
+    "latePaymentChart": [
+      {
+        "slab": "1 - 3 Days",
+        "title": "Grace Period",
+        "fee": "₹0 (Free)",
+        "interest": "0.0%",
+        "impact": "No Penalty, Credit Score Unaffected",
+        "status": "Safe"
+      },
+      {
+        "slab": "4 - 10 Days",
+        "title": "Minor Overdue",
+        "fee": "₹150 Flat",
+        "interest": "1.5% p.m.",
+        "impact": "SMS Reminder",
+        "status": "Warning"
+      },
+      {
+        "slab": "11 - 30 Days",
+        "title": "Moderate Default",
+        "fee": "₹350 + 2.0%",
+        "interest": "2.0% p.m.",
+        "impact": "Credit Alert (-20 Pts)",
+        "status": "Critical"
+      },
+      {
+        "slab": "31+ Days",
+        "title": "Severe Default / NPA",
+        "fee": "₹750 + 5.0%",
+        "interest": "3.5% p.m.",
+        "impact": "Legal Notice (-65 Pts)",
+        "status": "Severe"
+      }
+    ]
+  }
+}
+```
+
+---
+
+### 2.2 Get All Customers
+- **Endpoint:** `GET /api/customers`
+- **Response (200 OK):** Array of all registered society customers.
+
+---
+
+### 2.3 Create Customer
+- **Endpoint:** `POST /api/customers`
+- **Request Body:** JSON customer object.
+
+---
+
+## 3. Schemes & Offers APIs
+
+### 3.1 Get Active Schemes
+Fetch Admin-approved active schemes for Loans, FD, RD, and MIS.
+
+- **Endpoint:** `GET /api/schemes`
+- **Query Parameters:**
+  - `category` (optional): `LOAN`, `FD`, `RD`, or `MIS`
+  - `active` (optional): `true` (only returns active schemes)
+
+#### Example Request:
+`GET /api/schemes?category=FD&active=true`
+
+#### Response (200 OK):
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "code": "SCH-FD-01",
+      "category": "FD",
+      "name": "1-Year Super Saver FD",
+      "interestRate": 8.5,
+      "minAmount": 5000,
+      "maxAmount": 1000000,
+      "tenureMonths": 12,
+      "agentCommissionPercent": 1.0,
+      "status": "Active",
+      "description": "High guaranteed returns backed by MultiCredit cooperative security."
+    },
+    {
+      "code": "SCH-FD-02",
+      "category": "FD",
+      "name": "2-Year Wealth Maximizer FD",
+      "interestRate": 9.0,
+      "minAmount": 10000,
+      "maxAmount": 2500000,
+      "tenureMonths": 24,
+      "agentCommissionPercent": 1.25,
+      "status": "Active"
+    }
+  ]
+}
+```
+
+---
+
+## 4. Savings & Deposits APIs (FD / RD / MIS)
+
+### 4.1 Get Deposits
+- **Endpoint:** `GET /api/deposits`
+- **Response (200 OK):** List of all active deposit accounts.
+
+---
+
+### 4.2 Create Deposit Account
+Open a new Fixed Deposit, Recurring Deposit, or Monthly Income Scheme.
+
+- **Endpoint:** `POST /api/deposits`
+- **Headers:** `Content-Type: application/json`
+
+#### Request Body:
+```json
+{
+  "accountId": "FD842",
+  "customerName": "Md. Salim Ansari",
+  "customerId": "CUS001",
+  "type": "FD",
+  "amount": 50000,
+  "interestRate": 8.5,
+  "tenureMonths": 24,
+  "startDate": "25 Sep 2026",
+  "maturityDate": "25 Sep 2028",
+  "maturityAmount": 59000,
+  "monthlyPayout": 0,
+  "status": "Active"
+}
+```
+
+#### Response (200 OK):
+```json
+{
+  "success": true,
+  "message": "Deposit created in MongoDB",
+  "data": {
+    "accountId": "FD842",
+    "customerName": "Md. Salim Ansari",
+    "type": "FD",
+    "amount": 50000,
+    "status": "Active"
+  }
+}
+```
+
+---
+
+## 5. Loan & Credit APIs
+
+### 5.1 Get Loans
+- **Endpoint:** `GET /api/loans`
+- **Response (200 OK):** List of all loan applications and status.
+
+---
+
+### 5.2 Apply Loan / Daily Market Loan
+- **Endpoint:** `POST /api/loans`
+- **Headers:** `Content-Type: application/json`
+
+#### Request Body (Standard Loan):
+```json
+{
+  "loanId": "LN942",
+  "customerName": "Md. Salim Ansari",
+  "customerId": "CUS001",
+  "loanType": "Personal Loan",
+  "amount": 50000,
+  "tenureMonths": 24,
+  "interestRate": 12.0,
+  "monthlyEmi": 2350,
+  "appliedDate": "25 Sep 2026",
+  "status": "Approved",
+  "step": "Disbursement",
+  "paidEmis": 0,
+  "totalEmis": 24,
+  "isDailyLoan": false
+}
+```
+
+#### Request Body (Daily Market Loan):
+```json
+{
+  "loanId": "LN_DAILY_01",
+  "customerName": "Md. Salim Ansari",
+  "customerId": "CUS001",
+  "loanType": "Daily Loan",
+  "amount": 20000,
+  "tenureMonths": 3,
+  "interestRate": 10.0,
+  "monthlyEmi": 6000,
+  "appliedDate": "25 Sep 2026",
+  "status": "Approved",
+  "step": "Disbursement",
+  "isDailyLoan": true,
+  "dailyInstallment": 220,
+  "daysTotal": 100,
+  "daysPaid": 0
+}
+```
+
+---
+
+## 6. Razorpay Payment Gateway APIs
+
+### 6.1 Verify Razorpay Payment & Auto Credit Agent Commission
+Verifies an online payment transaction made through Razorpay (Savings Deposit, EMI Payment, Daily Installment, or FD/RD Opening), creates the official collection receipt in MongoDB, and automatically calculates & credits the linked Agent's commission into their wallet.
+
+- **Endpoint:** `POST /api/payments/razorpay/verify`
+- **Headers:** `Content-Type: application/json`
+
+#### Request Body:
+```json
+{
+  "paymentId": "pay_rzp_1727239900",
+  "orderId": "order_rzp_1727239900",
+  "customerId": "CUS001",
+  "customerName": "Md. Salim Ansari",
+  "amount": 5000,
+  "type": "DEPOSIT",
+  "schemeCode": "SCH-FD-01",
+  "loanId": "LN001",
+  "accountId": "FD001"
+}
+```
+*(Types supported: `DEPOSIT`, `EMI`, `DAILY_LOAN`, `FD`, `RD`, `MIS`)*
+
+#### Response (200 OK):
+```json
+{
+  "success": true,
+  "message": "Razorpay payment verified & automatically collected!",
+  "data": {
+    "receiptNo": "RC824",
+    "paymentId": "pay_rzp_1727239900",
+    "amount": 5000,
+    "agentCommissionCredited": 100,
+    "agentName": "Rakesh Kumar"
+  }
+}
+```
+
+---
+
+## 7. Collections & Passbook APIs
+
+### 7.1 Get Collections
+- **Endpoint:** `GET /api/collections`
+- **Response (200 OK):** List of all collection records across the society.
+
+---
+
+### 7.2 Create Collection Record
+- **Endpoint:** `POST /api/collections`
+- **Headers:** `Content-Type: application/json`
+
+#### Request Body:
+```json
+{
+  "receiptNo": "RC982",
+  "customerName": "Md. Salim Ansari",
+  "customerId": "CUS001",
+  "agentName": "Rakesh Kumar",
+  "type": "EMI",
+  "amount": 2350,
+  "mode": "UPI",
+  "date": "25 Sep 2026"
+}
+```
+
+---
+
+## 8. Document Upload API (KYC)
+
+### 8.1 Upload Document (Amazon S3 / Local Metadata)
+- **Endpoint:** `POST /api/s3/upload`
+- **Payload:** `multipart/form-data` with `file`, `entityType: "customer"`, `entityId: "CUS001"`
+- **Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "fileKey": "kyc/cust_pan_9876543210.jpg",
+    "s3Url": "https://multicredit-documents.s3.ap-south-1.amazonaws.com/kyc/cust_pan_9876543210.jpg"
+  }
+}
+```
+
+---
+
+*Generated for MultiCredit 360 Financial Platform. All endpoints are fully implemented and connected to database models.*

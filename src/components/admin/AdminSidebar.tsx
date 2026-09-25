@@ -21,6 +21,7 @@ import {
   User,
   LogOut,
   ChevronRight,
+  Sliders,
 } from 'lucide-react';
 
 export type AdminViewId =
@@ -69,6 +70,7 @@ export default function AdminSidebar({
     { href: '/admin/mlm', label: 'MLM / Commission', icon: Share2 },
     { href: '/admin/white-label', label: 'White Label', icon: Globe },
     { href: '/admin/reports', label: 'Reports', icon: FileText },
+    { href: '/admin/schemes', label: 'Offers & Razorpay', icon: Sliders },
     { href: '/admin/users', label: 'User Management', icon: ShieldAlert },
     { href: '/admin/settings', label: 'Settings', icon: Settings },
     { href: '/admin/profile', label: 'My Profile', icon: User },

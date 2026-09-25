@@ -54,8 +54,14 @@ export interface Agent {
   agentId: string;
   name: string;
   mobile: string;
+  email?: string;
+  password?: string;
   branch: string;
   status: 'Active' | 'Inactive';
+  referralCode?: string;
+  walletBalance?: number;
+  totalCommission?: string | number;
+  totalDirectCustomers?: number;
   online?: boolean;
   lastActive?: string;
   location?: { lat: number; lng: number; address: string };
@@ -71,8 +77,21 @@ export interface Customer {
   name: string;
   mobile: string;
   email: string;
+  password?: string;
+  panNumber?: string;
+  panImage?: string;
+  adhaarNumber?: string;
+  adhaarImage?: string;
   address: string;
-  dob: string;
+  pincode?: string;
+  referralCode?: string;
+  agentId?: string;
+  accountNumber?: string;
+  debitCardNumber?: string;
+  debitCardExpiry?: string;
+  debitCardCvv?: string;
+  savingsBalance?: number;
+  dob?: string;
   type: 'Loan' | 'FD' | 'RD' | 'MIS';
   status: 'Active' | 'Inactive';
   kycStatus: 'Verified' | 'Pending' | 'Rejected' | 'Under Review';
@@ -91,7 +110,7 @@ export interface LoanApplication {
   loanId: string;
   customerName: string;
   customerId: string;
-  loanType: 'Personal Loan' | 'Business Loan' | 'Emergency Loan' | 'Small Loan';
+  loanType: 'Personal Loan' | 'Business Loan' | 'Emergency Loan' | 'Small Loan' | 'Daily Loan';
   amount: number;
   tenureMonths: number;
   interestRate: number;
@@ -99,18 +118,28 @@ export interface LoanApplication {
   appliedDate: string;
   status: LoanStatus;
   step: 'Application' | 'Documents' | 'Verification' | 'Approval' | 'Disbursement';
+  paidEmis?: number;
+  totalEmis?: number;
+  lateFee?: number;
+  isDailyLoan?: boolean;
+  dailyInstallment?: number;
+  daysTotal?: number;
+  daysPaid?: number;
 }
 
 export interface DepositAccount {
   id: string;
   accountId: string;
   customerName: string;
+  customerId?: string;
   type: 'FD' | 'RD' | 'MIS';
   amount: number;
   interestRate?: number;
+  tenureMonths?: number;
   startDate: string;
   maturityDate: string;
   maturityAmount?: number;
+  monthlyPayout?: number;
   status: 'Active' | 'Matured' | 'Pending' | 'Premature Request';
 }
 
@@ -152,3 +181,31 @@ export interface SystemUser {
   status: 'Active' | 'Inactive';
   lastLogin: string;
 }
+
+export interface ProductScheme {
+  id: string;
+  code: string;
+  category: 'LOAN' | 'FD' | 'RD' | 'MIS';
+  name: string;
+  interestRate: number; // e.g. 8.5%
+  minAmount: number;
+  maxAmount: number;
+  tenureMonths: number;
+  agentCommissionPercent: number; // e.g. 2.0%
+  isDailyLoan?: boolean;
+  dailyTenureDays?: number;
+  status: 'Active' | 'Inactive';
+  description?: string;
+  features?: string[];
+}
+
+export interface GatewaySettings {
+  razorpayKeyId: string;
+  razorpayKeySecret: string;
+  razorpayWebhookSecret: string;
+  isLiveMode: boolean;
+  gatewayEnabled: boolean;
+  currency: string;
+  onboardingCommission: number; // ₹250
+}
+

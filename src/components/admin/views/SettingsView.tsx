@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Sliders,
   Mail,
@@ -15,15 +16,24 @@ import {
 } from 'lucide-react';
 
 export default function SettingsView() {
+  const router = useRouter();
   const [saved, setSaved] = useState(false);
 
   const settingsCards = [
+    {
+      id: 'razorpay-gateway',
+      title: 'Razorpay Gateway & Schemes',
+      desc: 'Update Razorpay API keys, automated collection webhooks & product commission rates',
+      icon: Key,
+      color: 'text-blue-600 bg-blue-50',
+      link: '/admin/schemes',
+    },
     {
       id: 'general',
       title: 'General Settings',
       desc: 'System timezone, currency symbol (₹), fiscal calendar & multi-language defaults',
       icon: Sliders,
-      color: 'text-blue-600 bg-blue-50',
+      color: 'text-indigo-600 bg-indigo-50',
     },
     {
       id: 'sms-email',
@@ -102,7 +112,13 @@ export default function SettingsView() {
           return (
             <div
               key={card.id}
-              onClick={handleSave}
+              onClick={() => {
+                if (card.link) {
+                  router.push(card.link);
+                } else {
+                  handleSave();
+                }
+              }}
               className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-md transition-all cursor-pointer group flex items-start gap-4"
             >
               <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${card.color}`}>

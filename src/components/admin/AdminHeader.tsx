@@ -48,8 +48,24 @@ export default function AdminHeader({
         </div>
       </div>
 
-      {/* Right side: Notifications + User Profile */}
-      <div className="flex items-center gap-3">
+      {/* Right side: Portal Switcher + Notifications + User Profile */}
+      <div className="flex items-center gap-2.5 sm:gap-3">
+        {/* Quick Portal Switcher */}
+        <div className="hidden md:flex items-center gap-1.5 text-xs">
+          <a
+            href="/agent/login"
+            className="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold transition flex items-center gap-1"
+          >
+            <span>Agent Portal ↗</span>
+          </a>
+          <a
+            href="/customer/login"
+            className="px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold transition flex items-center gap-1"
+          >
+            <span>Customer Portal ↗</span>
+          </a>
+        </div>
+
         {/* Notification bell */}
         <button
           onClick={() => alert('All systems operational. No unread critical alerts.')}
