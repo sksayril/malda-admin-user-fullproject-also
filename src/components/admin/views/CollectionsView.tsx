@@ -21,11 +21,11 @@ export default function CollectionsView({
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [formData, setFormData] = useState({
-    customerName: 'Md. Salim Ansari',
-    customerId: 'CUS001',
-    agentName: 'Rakesh Kumar',
+    customerName: '',
+    customerId: '',
+    agentName: '',
     type: 'EMI' as 'EMI' | 'RD' | 'Loan' | 'MIS' | 'FD',
-    amount: 2350,
+    amount: 1000,
     mode: 'UPI' as 'UPI' | 'Cash' | 'Bank',
   });
 

@@ -18,8 +18,8 @@ export default function LoansView({ loans, onSelectLoan, onAddLoan }: LoansViewP
 
   // New loan form state
   const [formData, setFormData] = useState({
-    customerName: 'Md. Salim Ansari',
-    customerId: 'CUS001',
+    customerName: '',
+    customerId: '',
     loanType: 'Personal Loan' as const,
     amount: 50000,
     tenureMonths: 24,

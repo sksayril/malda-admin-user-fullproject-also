@@ -1,21 +1,18 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/db';
 import { Collection } from '@/models';
-import { INITIAL_COLLECTIONS } from '@/data/mockData';
 
 export async function GET() {
   try {
     const conn = await connectToDatabase();
     if (conn) {
-      const collections = await Collection.find().lean();
-      if (collections.length > 0) {
-        return NextResponse.json({ success: true, data: collections });
-      }
+      const collections = await Collection.find().sort({ createdAt: -1 }).lean();
+      return NextResponse.json({ success: true, data: collections });
     }
   } catch (err) {
     console.error('Error reading collections from DB:', err);
   }
-  return NextResponse.json({ success: true, data: INITIAL_COLLECTIONS });
+  return NextResponse.json({ success: true, data: [] });
 }
 
 export async function POST(req: Request) {

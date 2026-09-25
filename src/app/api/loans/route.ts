@@ -1,22 +1,19 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/db';
 import { LoanApplicationModel } from '@/models';
-import { INITIAL_LOANS } from '@/data/mockData';
 import { calculateEmi } from '@/lib/financials';
 
 export async function GET() {
   try {
     const conn = await connectToDatabase();
     if (conn) {
-      const loans = await LoanApplicationModel.find().lean();
-      if (loans.length > 0) {
-        return NextResponse.json({ success: true, data: loans });
-      }
+      const loans = await LoanApplicationModel.find().sort({ createdAt: -1 }).lean();
+      return NextResponse.json({ success: true, data: loans });
     }
   } catch (err) {
     console.error('Error reading loans from DB:', err);
   }
-  return NextResponse.json({ success: true, data: INITIAL_LOANS });
+  return NextResponse.json({ success: true, data: [] });
 }
 
 export async function POST(req: Request) {

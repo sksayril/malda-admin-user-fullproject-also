@@ -31,8 +31,8 @@ export default function CustomerAuthPage({ initialMode = 'login' }: CustomerAuth
   const [isSignUp, setIsSignUp] = useState(initialMode === 'signup');
 
   // Login form state
-  const [loginIdentifier, setLoginIdentifier] = useState('9876543210');
-  const [loginPassword, setLoginPassword] = useState('cust123');
+  const [loginIdentifier, setLoginIdentifier] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
 
   // Signup form state
   const [name, setName] = useState('');
@@ -105,9 +105,9 @@ export default function CustomerAuthPage({ initialMode = 'login' }: CustomerAuth
         mobile,
         password,
         panNumber,
-        panImage: panImage || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&q=80',
+        panImage: panImage || '',
         adhaarNumber,
-        adhaarImage: adhaarImage || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&q=80',
+        adhaarImage: adhaarImage || '',
         address,
         pincode,
         referralCode,
@@ -134,11 +134,6 @@ export default function CustomerAuthPage({ initialMode = 'login' }: CustomerAuth
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleDemoLogin = (cust: Customer) => {
-    localStorage.setItem('mc360_customer_session', JSON.stringify(cust));
-    router.push('/customer/dashboard');
   };
 
   return (
@@ -435,38 +430,6 @@ export default function CustomerAuthPage({ initialMode = 'login' }: CustomerAuth
               </form>
             )}
 
-            {/* Quick Demo Logins for Customer */}
-            {!isSignUp && (
-              <div className="mt-5 pt-4 border-t border-slate-100">
-                <p className="text-[11px] font-semibold text-slate-500 mb-2 text-center">
-                  1-Click Demo Customer Access
-                </p>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setLoginIdentifier('9876543210');
-                      setLoginPassword('cust123');
-                    }}
-                    className="py-1.5 px-2.5 bg-slate-50 hover:bg-blue-50 text-slate-700 hover:text-blue-700 border border-slate-200 rounded-lg text-[11px] font-medium transition cursor-pointer text-left"
-                  >
-                    <span className="font-bold block">Md. Salim Ansari</span>
-                    <span className="text-[10px] text-slate-500">Loan & Daily Loan</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setLoginIdentifier('9876543212');
-                      setLoginPassword('suresh99');
-                    }}
-                    className="py-1.5 px-2.5 bg-slate-50 hover:bg-blue-50 text-slate-700 hover:text-blue-700 border border-slate-200 rounded-lg text-[11px] font-medium transition cursor-pointer text-left"
-                  >
-                    <span className="font-bold block">Suresh Mahto</span>
-                    <span className="text-[10px] text-slate-500">FD & RD Investor</span>
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Toggle Login / Signup */}

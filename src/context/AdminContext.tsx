@@ -125,16 +125,16 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
           fetch('/api/users').then((r) => r.json()),
         ]);
 
-        if (cRes.status === 'fulfilled' && cRes.value?.data?.length > 0) setCustomers(cRes.value.data);
-        if (lRes.status === 'fulfilled' && lRes.value?.data?.length > 0) setLoans(lRes.value.data);
-        if (bRes.status === 'fulfilled' && bRes.value?.data?.length > 0) setBranches(bRes.value.data);
-        if (aRes.status === 'fulfilled' && aRes.value?.data?.length > 0) setAgents(aRes.value.data);
-        if (dRes.status === 'fulfilled' && dRes.value?.data?.length > 0) setDeposits(dRes.value.data);
-        if (colRes.status === 'fulfilled' && colRes.value?.data?.length > 0) setCollections(colRes.value.data);
-        if (pRes.status === 'fulfilled' && pRes.value?.data?.length > 0) setPartners(pRes.value.data);
-        if (uRes.status === 'fulfilled' && uRes.value?.data?.length > 0) setUsers(uRes.value.data);
+        if (cRes.status === 'fulfilled' && Array.isArray(cRes.value?.data)) setCustomers(cRes.value.data);
+        if (lRes.status === 'fulfilled' && Array.isArray(lRes.value?.data)) setLoans(lRes.value.data);
+        if (bRes.status === 'fulfilled' && Array.isArray(bRes.value?.data)) setBranches(bRes.value.data);
+        if (aRes.status === 'fulfilled' && Array.isArray(aRes.value?.data)) setAgents(aRes.value.data);
+        if (dRes.status === 'fulfilled' && Array.isArray(dRes.value?.data)) setDeposits(dRes.value.data);
+        if (colRes.status === 'fulfilled' && Array.isArray(colRes.value?.data)) setCollections(colRes.value.data);
+        if (pRes.status === 'fulfilled' && Array.isArray(pRes.value?.data)) setPartners(pRes.value.data);
+        if (uRes.status === 'fulfilled' && Array.isArray(uRes.value?.data)) setUsers(uRes.value.data);
       } catch (err) {
-        console.warn('Using initial fallback state:', err);
+        console.warn('DB fetch error:', err);
       }
     };
 

@@ -1,56 +1,63 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/db';
 import { Agent, Customer, Collection } from '@/models';
-import { INITIAL_AGENTS, INITIAL_CUSTOMERS, INITIAL_COLLECTIONS } from '@/data/mockData';
 
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const agentId = searchParams.get('agentId') || searchParams.get('mobile') || 'AGT001';
+    const agentId = searchParams.get('agentId') || searchParams.get('mobile') || searchParams.get('email');
+
+    if (!agentId) {
+      return NextResponse.json(
+        { success: false, message: 'Agent ID, mobile, or email is required' },
+        { status: 400 }
+      );
+    }
 
     let agent: any = null;
     let customers: any[] = [];
     let collections: any[] = [];
 
-    try {
-      const conn = await connectToDatabase();
-      if (conn) {
-        agent = await Agent.findOne({
-          $or: [{ agentId }, { mobile: agentId }, { referralCode: agentId }],
-        }).lean();
+    const conn = await connectToDatabase();
+    if (conn) {
+      agent = await Agent.findOne({
+        $or: [
+          { agentId },
+          { mobile: agentId },
+          { email: agentId },
+          { referralCode: agentId },
+        ],
+      }).lean();
 
-        if (agent) {
-          customers = await Customer.find({
-            $or: [{ agentId: agent.agentId }, { referralCode: agent.referralCode }],
-          }).lean();
+      if (agent) {
+        customers = await Customer.find({
+          $or: [{ agentId: agent.agentId }, { referralCode: agent.referralCode }],
+        }).sort({ createdAt: -1 }).lean();
 
-          collections = await Collection.find({
-            $or: [{ agentName: agent.name }, { agentId: agent.agentId }],
-          }).lean();
-        }
+        collections = await Collection.find({
+          $or: [
+            { agentName: agent.name },
+            { agentId: agent.agentId },
+          ],
+        }).sort({ createdAt: -1 }).lean();
       }
-    } catch (err) {
-      console.warn('DB agent lookup error, using mock:', err);
     }
 
     if (!agent) {
-      agent =
-        INITIAL_AGENTS.find(
-          (a) => a.agentId === agentId || a.mobile === agentId || a.referralCode === agentId
-        ) || INITIAL_AGENTS[0];
-
-      customers = INITIAL_CUSTOMERS.filter(
-        (c) => c.agentId === agent.agentId || c.referralCode === agent.referralCode
+      return NextResponse.json(
+        { success: false, message: 'Agent account not found in database', data: null },
+        { status: 404 }
       );
-      collections = INITIAL_COLLECTIONS.filter((col) => col.agentName === agent.name);
     }
 
-    // Commission statistics breakdown
+    const currentBalance = Number(agent.walletBalance || 0);
+
+    // Commission statistics breakdown calculated from actual wallet balance
     const commissionBreakdown = {
-      directOnboarding: Number(agent.walletBalance || 18450) * 0.35,
-      loanDisbursementShare: Number(agent.walletBalance || 18450) * 0.4,
-      recurringDepositCommission: Number(agent.walletBalance || 18450) * 0.15,
-      mlmNetworkOverride: Number(agent.walletBalance || 18450) * 0.1,
+      directOnboarding: currentBalance * 0.35,
+      loanDisbursementShare: currentBalance * 0.4,
+      recurringDepositCommission: currentBalance * 0.15,
+      mlmNetworkOverride: currentBalance * 0.1,
     };
 
     return NextResponse.json({

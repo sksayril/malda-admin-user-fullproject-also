@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/db';
 import { User } from '@/models';
-import { INITIAL_USERS } from '@/data/mockData';
 import crypto from 'crypto';
 
 export async function GET() {
@@ -9,14 +8,12 @@ export async function GET() {
     const conn = await connectToDatabase();
     if (conn) {
       const users = await User.find({}, '-password').lean();
-      if (users.length > 0) {
-        return NextResponse.json({ success: true, data: users });
-      }
+      return NextResponse.json({ success: true, data: users });
     }
   } catch (err) {
     console.error('Error reading users from DB:', err);
   }
-  return NextResponse.json({ success: true, data: INITIAL_USERS });
+  return NextResponse.json({ success: true, data: [] });
 }
 
 export async function POST(req: Request) {

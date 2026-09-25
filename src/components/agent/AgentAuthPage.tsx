@@ -28,15 +28,15 @@ export default function AgentAuthPage({ initialMode = 'login' }: AgentAuthPagePr
   const [isSignUp, setIsSignUp] = useState(initialMode === 'signup');
 
   // Login form state
-  const [loginIdentifier, setLoginIdentifier] = useState('9876543210');
-  const [loginPassword, setLoginPassword] = useState('agent123');
+  const [loginIdentifier, setLoginIdentifier] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
 
   // Signup form state
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [mobile, setMobile] = useState('');
   const [password, setPassword] = useState('');
-  const [branch, setBranch] = useState('Kolkata HQ');
+  const [branch, setBranch] = useState('Main Branch');
   const [address, setAddress] = useState('');
 
   const [loading, setLoading] = useState(false);
@@ -105,11 +105,6 @@ export default function AgentAuthPage({ initialMode = 'login' }: AgentAuthPagePr
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleDemoLogin = (agent: Agent) => {
-    localStorage.setItem('mc360_agent_session', JSON.stringify(agent));
-    router.push('/agent/dashboard');
   };
 
   return (
@@ -330,38 +325,6 @@ export default function AgentAuthPage({ initialMode = 'login' }: AgentAuthPagePr
               </form>
             )}
 
-            {/* Quick Demo Logins for Agent */}
-            {!isSignUp && (
-              <div className="mt-5 pt-4 border-t border-slate-100">
-                <p className="text-[11px] font-semibold text-slate-500 mb-2 text-center">
-                  1-Click Demo Agent Access
-                </p>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setLoginIdentifier('9876543210');
-                      setLoginPassword('agent123');
-                    }}
-                    className="py-1.5 px-2.5 bg-slate-50 hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 border border-slate-200 rounded-lg text-[11px] font-medium transition cursor-pointer text-left"
-                  >
-                    <span className="font-bold block">Rakesh Kumar (AGT001)</span>
-                    <span className="text-[10px] text-slate-500">Kolkata HQ • 24 Users</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setLoginIdentifier('9876543211');
-                      setLoginPassword('agent123');
-                    }}
-                    className="py-1.5 px-2.5 bg-slate-50 hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 border border-slate-200 rounded-lg text-[11px] font-medium transition cursor-pointer text-left"
-                  >
-                    <span className="font-bold block">Sima Das (AGT002)</span>
-                    <span className="text-[10px] text-slate-500">Bardhaman • 18 Users</span>
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Toggle Login / Signup */}

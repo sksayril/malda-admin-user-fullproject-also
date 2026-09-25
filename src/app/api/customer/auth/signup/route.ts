@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/db';
 import { Customer } from '@/models';
-import { INITIAL_CUSTOMERS } from '@/data/mockData';
 
 export async function POST(req: Request) {
   try {

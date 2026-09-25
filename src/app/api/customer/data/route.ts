@@ -1,52 +1,55 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/db';
 import { Customer, LoanApplicationModel, Deposit, Collection } from '@/models';
-import { INITIAL_CUSTOMERS, INITIAL_LOANS, INITIAL_DEPOSITS, INITIAL_COLLECTIONS } from '@/data/mockData';
 
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const customerId = searchParams.get('customerId') || searchParams.get('mobile') || 'CUS001';
+    const customerId = searchParams.get('customerId') || searchParams.get('mobile') || searchParams.get('email');
+
+    if (!customerId) {
+      return NextResponse.json(
+        { success: false, message: 'CustomerId/Mobile/Email is required' },
+        { status: 400 }
+      );
+    }
 
     let customer: any = null;
     let loans: any[] = [];
     let deposits: any[] = [];
     let collections: any[] = [];
 
-    try {
-      const conn = await connectToDatabase();
-      if (conn) {
-        customer = await Customer.findOne({
-          $or: [{ customerId }, { mobile: customerId }, { accountNumber: customerId }],
-        }).lean();
+    const conn = await connectToDatabase();
+    if (conn) {
+      customer = await Customer.findOne({
+        $or: [
+          { customerId },
+          { mobile: customerId },
+          { email: customerId },
+          { accountNumber: customerId },
+        ],
+      }).lean();
 
-        if (customer) {
-          loans = await LoanApplicationModel.find({
-            $or: [{ customerId: customer.customerId }, { customerName: customer.name }],
-          }).lean();
+      if (customer) {
+        loans = await LoanApplicationModel.find({
+          $or: [{ customerId: customer.customerId }, { customerName: customer.name }],
+        }).sort({ createdAt: -1 }).lean();
 
-          deposits = await Deposit.find({
-            $or: [{ customerId: customer.customerId }, { customerName: customer.name }],
-          }).lean();
+        deposits = await Deposit.find({
+          $or: [{ customerId: customer.customerId }, { customerName: customer.name }],
+        }).sort({ createdAt: -1 }).lean();
 
-          collections = await Collection.find({
-            $or: [{ customerId: customer.customerId }, { customerName: customer.name }],
-          }).lean();
-        }
+        collections = await Collection.find({
+          $or: [{ customerId: customer.customerId }, { customerName: customer.name }],
+        }).sort({ createdAt: -1 }).lean();
       }
-    } catch (err) {
-      console.warn('DB error reading customer data, falling back to mock:', err);
     }
 
     if (!customer) {
-      customer =
-        INITIAL_CUSTOMERS.find(
-          (c) => c.customerId === customerId || c.mobile === customerId || c.accountNumber === customerId
-        ) || INITIAL_CUSTOMERS[0];
-
-      loans = INITIAL_LOANS.filter((l) => l.customerId === customer.customerId || l.customerName === customer.name);
-      deposits = INITIAL_DEPOSITS.filter((d) => d.customerName === customer.name || (d as any).customerId === customer.customerId);
-      collections = INITIAL_COLLECTIONS.filter((c) => c.customerId === customer.customerId);
+      return NextResponse.json(
+        { success: false, message: 'Customer record not found in database', data: null },
+        { status: 404 }
+      );
     }
 
     // Standard Late Payment Fee Structure Matrix

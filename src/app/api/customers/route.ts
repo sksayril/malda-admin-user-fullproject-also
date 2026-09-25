@@ -1,21 +1,18 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/db';
 import { Customer } from '@/models';
-import { INITIAL_CUSTOMERS } from '@/data/mockData';
 
 export async function GET() {
   try {
     const conn = await connectToDatabase();
     if (conn) {
-      const customers = await Customer.find().lean();
-      if (customers.length > 0) {
-        return NextResponse.json({ success: true, data: customers });
-      }
+      const customers = await Customer.find().sort({ createdAt: -1 }).lean();
+      return NextResponse.json({ success: true, data: customers });
     }
   } catch (err) {
     console.error('Error reading customers from MongoDB:', err);
   }
-  return NextResponse.json({ success: true, data: INITIAL_CUSTOMERS });
+  return NextResponse.json({ success: true, data: [] });
 }
 
 export async function POST(req: Request) {

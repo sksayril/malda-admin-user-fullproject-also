@@ -1,21 +1,18 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/db';
 import { Deposit } from '@/models';
-import { INITIAL_DEPOSITS } from '@/data/mockData';
 
 export async function GET() {
   try {
     const conn = await connectToDatabase();
     if (conn) {
-      const deps = await Deposit.find().lean();
-      if (deps.length > 0) {
-        return NextResponse.json({ success: true, data: deps });
-      }
+      const deps = await Deposit.find().sort({ createdAt: -1 }).lean();
+      return NextResponse.json({ success: true, data: deps });
     }
   } catch (err) {
     console.error('Error reading deposits from DB:', err);
   }
-  return NextResponse.json({ success: true, data: INITIAL_DEPOSITS });
+  return NextResponse.json({ success: true, data: [] });
 }
 
 export async function POST(req: Request) {

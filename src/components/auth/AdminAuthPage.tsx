@@ -10,9 +10,9 @@ interface AdminAuthPageProps {
 
 export default function AdminAuthPage({ onLoginSuccess }: AdminAuthPageProps) {
   const [isSignUp, setIsSignUp] = useState(false);
-  const [email, setEmail] = useState('superadmin@multicredit.com');
-  const [password, setPassword] = useState('admin123');
-  const [name, setName] = useState('Super Admin');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -52,58 +52,6 @@ export default function AdminAuthPage({ onLoginSuccess }: AdminAuthPageProps) {
     }
   };
 
-  const handleDemoLogin = async (role: 'Super Admin' | 'Branch Manager' | 'Agent') => {
-    setLoading(true);
-    setError('');
-
-    const demoCredentials = {
-      'Super Admin': { email: 'superadmin@multicredit.com', password: 'admin123' },
-      'Branch Manager': { email: 'branch1@multicredit.com', password: 'admin123' },
-      Agent: { email: 'rakesh.agent@multicredit.com', password: 'admin123' },
-    };
-
-    const creds = demoCredentials[role];
-
-    try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(creds),
-      });
-
-      const result = await res.json();
-
-      if (result.success && result.data?.user) {
-        if (result.data.token) {
-          localStorage.setItem('mc360_auth_token', result.data.token);
-        }
-        onLoginSuccess(result.data.user);
-      } else {
-        // Fallback demo state if offline
-        onLoginSuccess({
-          id: 'usr_admin_1',
-          name: role === 'Super Admin' ? 'Super Admin' : role === 'Branch Manager' ? 'R. Roy' : 'Rakesh Kumar',
-          email: creds.email,
-          role,
-          tenantId: 'TNT001',
-          mobile: '+91 98765 43210',
-        });
-      }
-    } catch {
-      // Offline fallback
-      onLoginSuccess({
-        id: 'usr_admin_1',
-        name: 'Super Admin',
-        email: creds.email,
-        role,
-        tenantId: 'TNT001',
-        mobile: '+91 98765 43210',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <div className="min-h-screen w-full bg-[#f8fafc] flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8">
       {/* Portal Switcher & Top Notification Bar */}
@@ -130,30 +78,6 @@ export default function AdminAuthPage({ onLoginSuccess }: AdminAuthPageProps) {
             <CreditCard className="w-3.5 h-3.5 text-blue-600" />
             <span>Customer Portal</span>
           </a>
-        </div>
-      </div>
-
-      <div className="mb-6 w-full max-w-4xl bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-600 rounded-2xl p-3 sm:p-4 text-white shadow-lg flex flex-col sm:flex-row items-center justify-between gap-3 text-sm">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center shrink-0">
-            <Sparkles className="w-4 h-4 text-amber-300" />
-          </div>
-          <div>
-            <span className="font-semibold">MultiCredit 360 Admin Portal</span>
-            <p className="text-xs text-blue-100 hidden sm:block">
-              Experience the complete 20-module FinTech & Credit Society platform
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <button
-            type="button"
-            onClick={() => handleDemoLogin('Super Admin')}
-            className="flex-1 sm:flex-none px-4 py-1.5 bg-white text-blue-700 hover:bg-blue-50 font-semibold rounded-lg text-xs shadow transition-all cursor-pointer flex items-center justify-center gap-1.5"
-          >
-            <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
-            1-Click Demo Login
-          </button>
         </div>
       </div>
 
@@ -285,30 +209,6 @@ export default function AdminAuthPage({ onLoginSuccess }: AdminAuthPageProps) {
               </button>
             </form>
 
-            {/* Quick Demo Logins */}
-            <div className="mt-6 pt-5 border-t border-slate-100">
-              <p className="text-xs font-semibold text-slate-600 mb-2.5 text-center">
-                Demo Credentials (Instant Access)
-              </p>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleDemoLogin('Super Admin')}
-                  className="py-2 px-3 bg-slate-50 hover:bg-blue-50 hover:text-blue-700 border border-slate-200 rounded-lg text-xs font-medium text-slate-700 flex items-center justify-center gap-1.5 transition cursor-pointer"
-                >
-                  <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
-                  Super Admin
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleDemoLogin('Branch Manager')}
-                  className="py-2 px-3 bg-slate-50 hover:bg-blue-50 hover:text-blue-700 border border-slate-200 rounded-lg text-xs font-medium text-slate-700 flex items-center justify-center gap-1.5 transition cursor-pointer"
-                >
-                  <Building2 className="w-3.5 h-3.5 text-indigo-600" />
-                  Branch Mgr
-                </button>
-              </div>
-            </div>
           </div>
 
           {/* Toggle between Login and Signup */}

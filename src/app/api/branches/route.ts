@@ -1,21 +1,18 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/db';
 import { Branch } from '@/models';
-import { INITIAL_BRANCHES } from '@/data/mockData';
 
 export async function GET() {
   try {
     const conn = await connectToDatabase();
     if (conn) {
-      const branches = await Branch.find().lean();
-      if (branches.length > 0) {
-        return NextResponse.json({ success: true, data: branches });
-      }
+      const branches = await Branch.find().sort({ createdAt: -1 }).lean();
+      return NextResponse.json({ success: true, data: branches });
     }
   } catch (err) {
     console.error('Error reading branches from DB:', err);
   }
-  return NextResponse.json({ success: true, data: INITIAL_BRANCHES });
+  return NextResponse.json({ success: true, data: [] });
 }
 
 export async function POST(req: Request) {

@@ -1,6 +1,6 @@
 # MultiCredit 360 - Complete Customer API Documentation (customerapi.doc)
 **Version:** 2.4.0  
-**Base URL:** `http://localhost:3000` (or production domain)  
+**Base URL:** `https://malda-admin-user-fullproject-also.vercel.app` (or production domain)  
 **Content-Type:** `application/json`
 
 ---
