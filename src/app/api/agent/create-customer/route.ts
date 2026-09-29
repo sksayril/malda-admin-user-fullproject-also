@@ -76,7 +76,7 @@ export async function POST(req: Request) {
 
         // Update Agent Wallet & Direct Customers Count
         if (agentId) {
-          await Agent.findOneAndUpdate(
+          const directAgent = await Agent.findOneAndUpdate(
             { $or: [{ agentId }, { referralCode: agentReferralCode }] },
             {
               $inc: {
@@ -84,8 +84,22 @@ export async function POST(req: Request) {
                 totalCommission: onboardingCommission,
                 totalDirectCustomers: 1,
               },
-            }
+            },
+            { new: true }
           );
+
+          if (directAgent) {
+            // Distribute Unilevel MLM Commission to upline chain!
+            const { distributeUnilevelCommission } = await import('@/lib/mlmService');
+            distributeUnilevelCommission({
+              fromAgentId: directAgent.agentId,
+              fromAgentName: directAgent.name,
+              eventType: 'CUSTOMER_ONBOARD',
+              sourceAmount: onboardingCommission,
+              notes: `Customer ${name} (${customerId}) onboarded by ${directAgent.name}`,
+              maxLevels: 14,
+            }).catch((e) => console.warn('MLM customer onboard distribution error:', e));
+          }
         }
 
         return NextResponse.json({

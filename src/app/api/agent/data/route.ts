@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/db';
-import { Agent, Customer, Collection } from '@/models';
+import { Agent, Customer, Collection, MlmCommissionLog } from '@/models';
+import { getAgentDownlineTree } from '@/lib/mlmService';
 
 export async function GET(req: Request) {
   try {
@@ -17,6 +18,8 @@ export async function GET(req: Request) {
     let agent: any = null;
     let customers: any[] = [];
     let collections: any[] = [];
+    let downlineTree: any = null;
+    let mlmCommissionLogs: any[] = [];
 
     const conn = await connectToDatabase();
     if (conn) {
@@ -40,6 +43,14 @@ export async function GET(req: Request) {
             { agentId: agent.agentId },
           ],
         }).sort({ createdAt: -1 }).lean();
+
+        // Fetch downline tree
+        downlineTree = await getAgentDownlineTree(agent.agentId);
+
+        // Fetch MLM commission transactions
+        mlmCommissionLogs = await MlmCommissionLog.find({
+          toAgentId: agent.agentId,
+        }).sort({ createdAt: -1 }).limit(20).lean();
       }
     }
 
@@ -55,9 +66,9 @@ export async function GET(req: Request) {
     // Commission statistics breakdown calculated from actual wallet balance
     const commissionBreakdown = {
       directOnboarding: currentBalance * 0.35,
-      loanDisbursementShare: currentBalance * 0.4,
+      loanDisbursementShare: currentBalance * 0.3,
       recurringDepositCommission: currentBalance * 0.15,
-      mlmNetworkOverride: currentBalance * 0.1,
+      mlmNetworkOverride: agent.mlmCommissionEarned || currentBalance * 0.2,
     };
 
     return NextResponse.json({
@@ -66,6 +77,8 @@ export async function GET(req: Request) {
         agent,
         customers,
         collections,
+        downlineTree,
+        mlmCommissionLogs,
         commissionBreakdown,
       },
     });

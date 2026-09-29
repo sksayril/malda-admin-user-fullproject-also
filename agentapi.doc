@@ -357,25 +357,176 @@ Fetch all Admin-defined schemes to see what commission percentage the agent earn
 
 ---
 
-## 6. Wallet & Payout Operations
+## 7. Multi-Level Unilevel Referral & Commission APIs
 
-### 6.1 Automated Commission Distribution
-When a customer makes an online payment or investment via Razorpay (verified via `POST /api/payments/razorpay/verify`), the linked agent automatically receives their commission based on the product scheme percentage.
+### 7.1 Get MLM Level Configurations & Criteria
+Fetch all Admin-configured 14 hierarchical MLM levels with commission percentages, fixed bonuses, minimum direct referrals criteria, and minimum team volume.
 
-#### System Execution Flow:
-1. Customer executes Razorpay transaction of `amount: ₹50,000` for FD Scheme `SCH-FD-01` (`agentCommissionPercent: 1.0%`).
-2. Server verifies transaction and identifies linked agent `AGT001`.
-3. Server credits `₹500` (1.0% of ₹50,000) directly into `walletBalance` of `AGT001`.
-4. Agent's dashboard displays real-time updated wallet balance and receipt entry.
+- **Endpoint:** `GET /api/mlm/settings`
+- **Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "levels": [
+      {
+        "level": 1,
+        "name": "Level 1 - Direct Advisor",
+        "commissionPercent": 10.0,
+        "fixedBonus": 200,
+        "minDirectReferrals": 0,
+        "minBusinessVolume": 0,
+        "status": "Active",
+        "membersCount": 12,
+        "totalCommission": 125000,
+        "pendingCommission": 0
+      },
+      {
+        "level": 2,
+        "name": "Level 2 - Executive Partner",
+        "commissionPercent": 5.0,
+        "fixedBonus": 100,
+        "minDirectReferrals": 2,
+        "minBusinessVolume": 10000,
+        "status": "Active",
+        "membersCount": 24,
+        "totalCommission": 85000,
+        "pendingCommission": 5000
+      }
+    ],
+    "summary": {
+      "totalLevels": 14,
+      "totalSystemCommission": 500000,
+      "totalPendingCommission": 50000,
+      "totalAgents": 45
+    }
+  }
+}
+```
 
 ---
 
-### 6.2 Agent Payout Withdrawal
-Agents can request direct IMPS / NEFT transfer of their accumulated wallet balance to their registered bank account or UPI ID.
+### 7.2 Update MLM Level Criteria & Percentages (Admin)
+Allows Society Admin to customize commission rates, flat joining bonuses, and qualification conditions for any level.
 
-- **Transfer Speed:** Instant (within 10 minutes)
-- **Supported Channels:** State Bank of India, HDFC Bank, Punjab National Bank, Google Pay UPI, PhonePe UPI.
+- **Endpoint:** `POST /api/mlm/settings`
+- **Headers:** `Content-Type: application/json`
+
+#### Request Body:
+```json
+{
+  "levels": [
+    {
+      "level": 1,
+      "name": "Level 1 - Direct Advisor",
+      "commissionPercent": 10.0,
+      "fixedBonus": 200,
+      "minDirectReferrals": 0,
+      "minBusinessVolume": 0,
+      "status": "Active"
+    },
+    {
+      "level": 2,
+      "name": "Level 2 - Executive Partner",
+      "commissionPercent": 5.0,
+      "fixedBonus": 100,
+      "minDirectReferrals": 2,
+      "minBusinessVolume": 10000,
+      "status": "Active"
+    }
+  ]
+}
+```
 
 ---
 
-*Generated for MultiCredit 360 Financial Network. All Agent endpoints are active, connected to MongoDB, and integrated with the Admin & Customer portals.*
+### 7.3 Get Agent Downline Tree (14-Level Hierarchy)
+Retrieve an agent's complete downline tree grouped from Level 1 to Level 14 with membership status, unlocked qualification flags, and direct count.
+
+- **Endpoint:** `GET /api/mlm/tree?agentId=AGT001`
+- **Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "agent": {
+      "agentId": "AGT001",
+      "name": "Rakesh Kumar",
+      "directAgentsCount": 5,
+      "totalTeamCount": 28,
+      "walletBalance": 24500
+    },
+    "totalDownlineMembers": 28,
+    "levelBreakdown": [
+      {
+        "level": 1,
+        "name": "Level 1 - Direct Advisor",
+        "commissionPercent": 10.0,
+        "fixedBonus": 200,
+        "isUnlocked": true,
+        "membersCount": 5,
+        "members": [
+          {
+            "agentId": "AGT102",
+            "name": "Anil Das",
+            "mobile": "9876543212",
+            "branch": "Kolkata HQ"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+---
+
+### 7.4 Get Commission Distribution Ledger
+Fetch real-time transaction ledger of all unilevel commission distributions.
+
+- **Endpoint:** `GET /api/mlm/commissions?agentId=AGT001&level=1`
+- **Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "transactionId": "MLM-1727240100000-842",
+      "fromAgentId": "AGT102",
+      "fromAgentName": "Anil Das",
+      "toAgentId": "AGT001",
+      "toAgentName": "Rakesh Kumar",
+      "level": 1,
+      "eventType": "AGENT_JOIN",
+      "sourceAmount": 0,
+      "commissionAmount": 200,
+      "status": "Credited",
+      "date": "29 Sep 2026"
+    }
+  ]
+}
+```
+
+---
+
+### 7.5 Trigger Unilevel Commission Distribution (Manual / Hook)
+Trigger unilevel commission distribution programmatically for an agent event.
+
+- **Endpoint:** `POST /api/mlm/distribute`
+- **Headers:** `Content-Type: application/json`
+
+#### Request Body:
+```json
+{
+  "fromAgentId": "AGT102",
+  "fromAgentName": "Anil Das",
+  "eventType": "COLLECTION",
+  "sourceAmount": 5000,
+  "notes": "Loan EMI payment of ₹5000"
+}
+```
+
+---
+
+*Generated for MultiCredit 360 Financial Network. All Agent & Unilevel MLM endpoints are active, connected to MongoDB, and integrated with the Admin & Agent portals.*
+

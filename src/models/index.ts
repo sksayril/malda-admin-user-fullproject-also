@@ -47,6 +47,13 @@ const AgentSchema = new Schema(
     branch: { type: String, required: true },
     status: { type: String, enum: ['Active', 'Inactive'], default: 'Active' },
     referralCode: { type: String, default: 'AGT-3601' },
+    sponsorAgentId: { type: String, default: '' },
+    sponsorReferralCode: { type: String, default: '' },
+    upline: [{ type: String }], // List of ancestor agent IDs from Level 1 up to top
+    level: { type: Number, default: 1 }, // Current unlocked rank/tier (1 to 14)
+    directAgentsCount: { type: Number, default: 0 },
+    totalTeamCount: { type: Number, default: 0 },
+    mlmCommissionEarned: { type: Number, default: 0 },
     walletBalance: { type: Number, default: 18450 },
     totalCommission: { type: Number, default: 42500 },
     totalDirectCustomers: { type: Number, default: 24 },
@@ -276,6 +283,47 @@ const GatewaySettingsSchema = new Schema(
   { timestamps: true }
 );
 
+// MLM Level Configuration Schema (Admin sets level criteria, commission % and bonuses)
+const MlmLevelConfigSchema = new Schema(
+  {
+    level: { type: Number, required: true, unique: true }, // 1 to 14
+    name: { type: String, required: true }, // e.g. "Level 1 - Direct Advisor"
+    commissionPercent: { type: Number, required: true, default: 5.0 }, // % earned on team volume
+    fixedBonus: { type: Number, default: 0 }, // Flat joining / trigger bonus ₹
+    minDirectReferrals: { type: Number, default: 0 }, // Condition: min direct agents required
+    minBusinessVolume: { type: Number, default: 0 }, // Condition: min total team volume (₹)
+    status: { type: String, enum: ['Active', 'Inactive'], default: 'Active' },
+    description: { type: String, default: '' },
+    tenantId: { type: String, default: 'TNT001', index: true },
+  },
+  { timestamps: true }
+);
+
+// MLM Commission Log Schema (Audit history of every unilevel distribution)
+const MlmCommissionLogSchema = new Schema(
+  {
+    transactionId: { type: String, required: true, unique: true },
+    fromAgentId: { type: String, required: true },
+    fromAgentName: { type: String, required: true },
+    toAgentId: { type: String, required: true, index: true },
+    toAgentName: { type: String, required: true },
+    level: { type: Number, required: true }, // 1 to 14
+    eventType: {
+      type: String,
+      enum: ['AGENT_JOIN', 'CUSTOMER_ONBOARD', 'COLLECTION', 'DEPOSIT', 'LOAN_EMI', 'MANUAL_PAYOUT'],
+      default: 'AGENT_JOIN',
+    },
+    sourceAmount: { type: Number, default: 0 },
+    commissionPercent: { type: Number, default: 0 },
+    commissionAmount: { type: Number, required: true },
+    status: { type: String, enum: ['Credited', 'Pending', 'Rejected'], default: 'Credited' },
+    notes: { type: String, default: '' },
+    date: { type: String, required: true },
+    tenantId: { type: String, default: 'TNT001', index: true },
+  },
+  { timestamps: true }
+);
+
 // Export Mongoose Models (re-use if already compiled in Next.js hot reload)
 export const User = models.User || model('User', UserSchema);
 export const Society = models.Society || model('Society', SocietySchema);
@@ -289,5 +337,7 @@ export const Partner = models.Partner || model('Partner', PartnerSchema);
 export const DocumentMetadata = models.DocumentMetadata || model('DocumentMetadata', DocumentMetadataSchema);
 export const ProductSchemeModel = models.ProductScheme || model('ProductScheme', ProductSchemeSchema);
 export const GatewaySettingsModel = models.GatewaySettings || model('GatewaySettings', GatewaySettingsSchema);
+export const MlmLevelConfig = models.MlmLevelConfig || model('MlmLevelConfig', MlmLevelConfigSchema);
+export const MlmCommissionLog = models.MlmCommissionLog || model('MlmCommissionLog', MlmCommissionLogSchema);
 
 

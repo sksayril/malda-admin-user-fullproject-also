@@ -36,12 +36,25 @@ export default function AgentAuthPage({ initialMode = 'login' }: AgentAuthPagePr
   const [email, setEmail] = useState('');
   const [mobile, setMobile] = useState('');
   const [password, setPassword] = useState('');
+  const [sponsorCode, setSponsorCode] = useState('');
   const [branch, setBranch] = useState('Main Branch');
   const [address, setAddress] = useState('');
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+
+  // Auto-detect referral code from URL
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const ref = params.get('ref') || params.get('sponsor');
+      if (ref) {
+        setSponsorCode(ref);
+        setIsSignUp(true);
+      }
+    }
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,6 +95,7 @@ export default function AgentAuthPage({ initialMode = 'login' }: AgentAuthPagePr
         password,
         branch,
         address,
+        sponsorReferralCode: sponsorCode,
       };
 
       const res = await fetch('/api/agent/auth/signup', {
@@ -93,7 +107,11 @@ export default function AgentAuthPage({ initialMode = 'login' }: AgentAuthPagePr
       const data = await res.json();
       if (data.success && data.data?.agent) {
         localStorage.setItem('mc360_agent_session', JSON.stringify(data.data.agent));
-        setSuccessMsg('Agent account created successfully! Redirecting...');
+        setSuccessMsg(
+          data.data.sponsorLinked
+            ? `Agent registered and linked under sponsor ${data.data.sponsorId}! Redirecting...`
+            : 'Agent account created successfully! Redirecting...'
+        );
         setTimeout(() => {
           router.push('/agent/dashboard');
         }, 1200);
@@ -295,6 +313,23 @@ export default function AgentAuthPage({ initialMode = 'login' }: AgentAuthPagePr
                       className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs"
                     />
                   </div>
+                </div>
+
+                {/* Sponsor / Referral Code */}
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    Sponsor Referral Code (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={sponsorCode}
+                    onChange={(e) => setSponsorCode(e.target.value.toUpperCase())}
+                    placeholder="e.g. AGT-3601 (Agent who invited you)"
+                    className="w-full px-3 py-2 rounded-xl border border-indigo-200 bg-indigo-50/50 uppercase font-mono text-xs text-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 font-bold"
+                  />
+                  <span className="text-[10px] text-slate-500 mt-0.5 block">
+                    Entering a valid sponsor links you to their 14-level unilevel team network.
+                  </span>
                 </div>
 
                 <div>

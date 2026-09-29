@@ -37,8 +37,12 @@ export default function AgentDashboardPage() {
   const [agent, setAgent] = useState<Agent | null>(null);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [collections, setCollections] = useState<CollectionRecord[]>([]);
+  const [downlineTree, setDownlineTree] = useState<any>(null);
+  const [mlmLogs, setMlmLogs] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState<'customers' | 'mlmNetwork' | 'collections'>('customers');
   const [loading, setLoading] = useState(true);
   const [copiedRef, setCopiedRef] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
 
   // Modals
   const [isOnboardModalOpen, setIsOnboardModalOpen] = useState(false);
@@ -88,6 +92,8 @@ export default function AgentDashboardPage() {
             if (res.data.agent) setAgent(res.data.agent);
             if (res.data.customers) setCustomers(res.data.customers);
             if (res.data.collections) setCollections(res.data.collections);
+            if (res.data.downlineTree) setDownlineTree(res.data.downlineTree);
+            if (res.data.mlmCommissionLogs) setMlmLogs(res.data.mlmCommissionLogs);
           }
         })
         .catch((err) => console.warn('Error loading agent data:', err))
@@ -109,6 +115,16 @@ export default function AgentDashboardPage() {
     navigator.clipboard.writeText(code);
     setCopiedRef(true);
     setTimeout(() => setCopiedRef(false), 2000);
+  };
+
+  const copyReferralLink = () => {
+    if (!agent) return;
+    const code = agent.referralCode || `AGT-${agent.mobile?.slice(-4) || '3601'}`;
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const link = `${origin}/agent/signup?ref=${code}`;
+    navigator.clipboard.writeText(link);
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2000);
   };
 
   // Image Upload helper
@@ -363,56 +379,56 @@ export default function AgentDashboardPage() {
             </div>
           </div>
 
-          {/* Referral Code & QR Card */}
+          {/* Referral Code & Invite Link Card */}
           <div className="p-6 rounded-3xl bg-white border border-slate-200/90 shadow-sm flex flex-col justify-between">
             <div>
-              <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
                     <Tag className="w-4 h-4" />
                   </div>
-                  <span className="text-xs font-semibold text-slate-600">Your Referral Code</span>
+                  <span className="text-xs font-semibold text-slate-600">Your Referral Code & Link</span>
                 </div>
                 <button
                   type="button"
                   onClick={() => setIsQrModalOpen(true)}
-                  className="p-1 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                  className="p-1 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 cursor-pointer"
                   title="Show QR Code"
                 >
                   <QrCode className="w-4 h-4" />
                 </button>
               </div>
 
-              <div className="flex items-center justify-between p-3 rounded-2xl bg-indigo-50/70 border border-indigo-100">
-                <span className="font-mono text-lg font-extrabold text-indigo-900 tracking-wider">
+              <div className="flex items-center justify-between p-2.5 rounded-2xl bg-indigo-50/70 border border-indigo-100 mb-2">
+                <span className="font-mono text-base font-extrabold text-indigo-900 tracking-wider">
                   {referralCode}
                 </span>
                 <button
                   type="button"
                   onClick={copyReferralCode}
-                  className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs transition flex items-center gap-1 cursor-pointer"
+                  className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-[11px] transition flex items-center gap-1 cursor-pointer"
                 >
-                  {copiedRef ? (
-                    <>
-                      <Check className="w-3.5 h-3.5" />
-                      <span>Copied</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-3.5 h-3.5" />
-                      <span>Copy</span>
-                    </>
-                  )}
+                  {copiedRef ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                  <span>{copiedRef ? 'Copied' : 'Copy'}</span>
                 </button>
               </div>
-              <p className="text-[11px] text-slate-500 mt-2">
-                Share this code with customers to auto-link accounts and receive direct bonuses.
-              </p>
+
+              {/* Direct Invite Link */}
+              <button
+                type="button"
+                onClick={copyReferralLink}
+                className="w-full py-1.5 px-2.5 rounded-xl border border-indigo-200 bg-white hover:bg-indigo-50 text-indigo-700 font-bold text-[11px] flex items-center justify-between transition cursor-pointer"
+              >
+                <span className="truncate">🔗 Invite Agent Link</span>
+                <span className="text-[10px] text-indigo-600 font-semibold shrink-0">
+                  {copiedLink ? '✓ Copied Link' : 'Copy Link'}
+                </span>
+              </button>
             </div>
 
-            <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600">
-              <span>Direct Customers: <strong className="text-indigo-700">{customers.length} Members</strong></span>
-              <span className="text-emerald-700 font-bold">₹250 / Onboarding</span>
+            <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600">
+              <span>Direct Team: <strong className="text-indigo-700">{agent?.directAgentsCount || 0} Agents</strong></span>
+              <span className="text-purple-700 font-bold">{downlineTree?.totalDownlineMembers || 0} Total Network</span>
             </div>
           </div>
 
@@ -424,7 +440,7 @@ export default function AgentDashboardPage() {
                 <h4 className="text-base font-extrabold">Agent User Create (Onboard)</h4>
               </div>
               <p className="text-xs text-indigo-100 leading-relaxed">
-                Register new customers directly with Aadhaar, PAN card images, address, and password. Earn instant wallet bonus.
+                Register new customers directly with Aadhaar, PAN card images, address, and password. Earn instant ₹250 wallet bonus.
               </p>
             </div>
 
@@ -452,7 +468,7 @@ export default function AgentDashboardPage() {
               </p>
             </div>
             <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100">
-              Agent Tier: Platinum Advisor
+              Rank: Level {agent?.level || 1} Advisor
             </span>
           </div>
 
@@ -484,142 +500,326 @@ export default function AgentDashboardPage() {
             <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100">
               <span className="text-[11px] text-slate-500 font-medium block">14-Level MLM Network Share</span>
               <span className="text-base font-extrabold text-purple-700 mt-0.5 block">
-                ₹ {Math.round(walletBalance * 0.1).toLocaleString('en-IN')}
+                ₹ {Number(agent?.mlmCommissionEarned || Math.round(walletBalance * 0.1)).toLocaleString('en-IN')}
               </span>
-              <span className="text-[10px] text-purple-600 font-semibold">(Downline overrides)</span>
+              <span className="text-[10px] text-purple-600 font-semibold">({downlineTree?.totalDownlineMembers || 0} downline agents)</span>
             </div>
           </div>
         </div>
 
-        {/* My Registered Customers Table */}
-        <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm overflow-hidden space-y-4 p-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <h3 className="text-base font-bold text-slate-900 tracking-tight flex items-center gap-2">
-                <Users className="w-5 h-5 text-indigo-600" />
-                <span>My Registered Customers ({customers.length})</span>
-              </h3>
-              <p className="text-xs text-slate-500">
-                Customers enrolled under your referral code with KYC records and collection actions
-              </p>
+        {/* Dashboard Tabs Switcher */}
+        <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-2">
+          <button
+            type="button"
+            onClick={() => setActiveTab('customers')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'customers'
+                ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-500/25'
+                : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+            }`}
+          >
+            <Users className="w-3.5 h-3.5" />
+            <span>My Registered Customers ({customers.length})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('mlmNetwork')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'mlmNetwork'
+                ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-500/25'
+                : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+            }`}
+          >
+            <Share2 className="w-3.5 h-3.5" />
+            <span>My 14-Level MLM Team Network ({downlineTree?.totalDownlineMembers || 0})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('collections')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'collections'
+                ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-500/25'
+                : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+            }`}
+          >
+            <DollarSign className="w-3.5 h-3.5" />
+            <span>Collection Receipts ({collections.length})</span>
+          </button>
+        </div>
+
+        {/* Tab 1: Customers View */}
+        {activeTab === 'customers' && (
+          <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm overflow-hidden space-y-4 p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h3 className="text-base font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                  <Users className="w-5 h-5 text-indigo-600" />
+                  <span>My Registered Customers ({customers.length})</span>
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Customers enrolled under your referral code with KYC records and collection actions
+                </p>
+              </div>
+
+              <div className="relative w-full sm:w-72">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search name, phone, or account..."
+                  className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                />
+              </div>
             </div>
 
-            <div className="relative w-full sm:w-72">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search name, phone, or account..."
-                className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-              />
-            </div>
-          </div>
-
-          <div className="overflow-x-auto rounded-2xl border border-slate-200/80">
-            <table className="w-full text-left text-xs text-slate-600">
-              <thead className="bg-slate-50 border-b border-slate-200/80 text-slate-700 uppercase font-semibold text-[11px] tracking-wider">
-                <tr>
-                  <th className="py-3.5 px-4">Customer</th>
-                  <th className="py-3.5 px-4">Account Number</th>
-                  <th className="py-3.5 px-4">Mobile</th>
-                  <th className="py-3.5 px-4">Type</th>
-                  <th className="py-3.5 px-4 text-center">KYC Status</th>
-                  <th className="py-3.5 px-4 text-right">Savings Bal</th>
-                  <th className="py-3.5 px-4 text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 font-medium">
-                {filteredCustomers.length === 0 ? (
+            <div className="overflow-x-auto rounded-2xl border border-slate-200/80">
+              <table className="w-full text-left text-xs text-slate-600">
+                <thead className="bg-slate-50 border-b border-slate-200/80 text-slate-700 uppercase font-semibold text-[11px] tracking-wider">
                   <tr>
-                    <td colSpan={7} className="py-8 text-center text-slate-400">
-                      No customers found matching search.
-                    </td>
+                    <th className="py-3.5 px-4">Customer</th>
+                    <th className="py-3.5 px-4">Account Number</th>
+                    <th className="py-3.5 px-4">Mobile</th>
+                    <th className="py-3.5 px-4">Type</th>
+                    <th className="py-3.5 px-4 text-center">KYC Status</th>
+                    <th className="py-3.5 px-4 text-right">Savings Bal</th>
+                    <th className="py-3.5 px-4 text-right">Action</th>
                   </tr>
-                ) : (
-                  filteredCustomers.map((cust) => (
-                    <tr key={cust.id} className="hover:bg-slate-50/80 transition">
-                      <td className="py-3.5 px-4">
-                        <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-full bg-indigo-50 text-indigo-700 flex items-center justify-center font-bold text-[11px]">
-                            {cust.name.charAt(0)}
-                          </div>
-                          <div>
-                            <span className="font-bold text-slate-900 block">{cust.name}</span>
-                            <span className="text-[10px] text-slate-400">{cust.customerId}</span>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-3.5 px-4 font-mono font-bold text-indigo-600">
-                        {cust.accountNumber || `MC360-${cust.mobile}`}
-                      </td>
-                      <td className="py-3.5 px-4 text-slate-700">{cust.mobile}</td>
-                      <td className="py-3.5 px-4">
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
-                          {cust.type || 'Loan'}
-                        </span>
-                      </td>
-                      <td className="py-3.5 px-4 text-center">
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                          {cust.kycStatus || 'Verified'}
-                        </span>
-                      </td>
-                      <td className="py-3.5 px-4 text-right font-extrabold text-slate-900">
-                        ₹ {(cust.savingsBalance || 15000).toLocaleString('en-IN')}
-                      </td>
-                      <td className="py-3.5 px-4 text-right">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSelectedCustomerForCollection(cust);
-                            setIsCollectModalOpen(true);
-                          }}
-                          className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-600 hover:text-white text-indigo-700 rounded-xl text-xs font-bold transition cursor-pointer"
-                        >
-                          Collect EMI / RD
-                        </button>
+                </thead>
+                <tbody className="divide-y divide-slate-100 font-medium">
+                  {filteredCustomers.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="py-8 text-center text-slate-400">
+                        No customers found matching search.
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  ) : (
+                    filteredCustomers.map((cust) => (
+                      <tr key={cust.id} className="hover:bg-slate-50/80 transition">
+                        <td className="py-3.5 px-4">
+                          <div className="flex items-center gap-2">
+                            <div className="w-7 h-7 rounded-full bg-indigo-50 text-indigo-700 flex items-center justify-center font-bold text-[11px]">
+                              {cust.name.charAt(0)}
+                            </div>
+                            <div>
+                              <span className="font-bold text-slate-900 block">{cust.name}</span>
+                              <span className="text-[10px] text-slate-400">{cust.customerId}</span>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-3.5 px-4 font-mono font-bold text-indigo-600">
+                          {cust.accountNumber || `MC360-${cust.mobile}`}
+                        </td>
+                        <td className="py-3.5 px-4 text-slate-700">{cust.mobile}</td>
+                        <td className="py-3.5 px-4">
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                            {cust.type || 'Loan'}
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-4 text-center">
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                            {cust.kycStatus || 'Verified'}
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-4 text-right font-extrabold text-slate-900">
+                          ₹ {(cust.savingsBalance || 15000).toLocaleString('en-IN')}
+                        </td>
+                        <td className="py-3.5 px-4 text-right">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedCustomerForCollection(cust);
+                              setIsCollectModalOpen(true);
+                            }}
+                            className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-600 hover:text-white text-indigo-700 rounded-xl text-xs font-bold transition cursor-pointer"
+                          >
+                            Collect EMI / RD
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* Collection History Table */}
-        <div className="bg-white p-6 rounded-3xl border border-slate-200/90 shadow-sm space-y-4">
-          <h3 className="text-base font-bold text-slate-900 tracking-tight flex items-center gap-2">
-            <DollarSign className="w-5 h-5 text-emerald-600" />
-            <span>Recent Agent Collection Receipts</span>
-          </h3>
-
-          <div className="space-y-2 text-xs">
-            {collections.slice(0, 5).map((col) => (
-              <div
-                key={col.id}
-                className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-100"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs">
-                    ✓
-                  </div>
-                  <div>
-                    <span className="font-bold text-slate-900 block">
-                      {col.customerName} ({col.type})
-                    </span>
-                    <span className="text-[10px] text-slate-500 font-mono">
-                      Receipt #{col.receiptNo} • Mode: {col.mode} • Date: {col.date}
-                    </span>
-                  </div>
+        {/* Tab 2: 14-Level MLM Team Network */}
+        {activeTab === 'mlmNetwork' && (
+          <div className="space-y-4">
+            {/* Team Summary Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="p-5 rounded-3xl bg-white border border-slate-200/90 shadow-sm">
+                <span className="text-xs font-medium text-slate-500 block mb-1">Directly Referred Agents</span>
+                <div className="text-2xl font-extrabold text-indigo-600">
+                  {agent?.directAgentsCount || 0} Agents
                 </div>
-                <span className="text-sm font-extrabold text-emerald-700">
-                  + ₹ {col.amount.toLocaleString('en-IN')}
-                </span>
+                <span className="text-[11px] text-slate-400">Level 1 Direct Partners</span>
               </div>
-            ))}
+
+              <div className="p-5 rounded-3xl bg-white border border-slate-200/90 shadow-sm">
+                <span className="text-xs font-medium text-slate-500 block mb-1">Total 14-Level Network</span>
+                <div className="text-2xl font-extrabold text-purple-600">
+                  {downlineTree?.totalDownlineMembers || 0} Downline Members
+                </div>
+                <span className="text-[11px] text-purple-600 font-medium">Accumulated Multi-tier Team</span>
+              </div>
+
+              <div className="p-5 rounded-3xl bg-white border border-slate-200/90 shadow-sm">
+                <span className="text-xs font-medium text-slate-500 block mb-1">MLM Team Commission</span>
+                <div className="text-2xl font-extrabold text-emerald-600">
+                  ₹ {Number(agent?.mlmCommissionEarned || 0).toLocaleString('en-IN')}
+                </div>
+                <span className="text-[11px] text-emerald-600 font-medium">Earned from Downline Overrides</span>
+              </div>
+            </div>
+
+            {/* Level Breakdown Cards */}
+            <div className="bg-white p-6 rounded-3xl border border-slate-200/90 shadow-sm space-y-4">
+              <div>
+                <h3 className="text-base font-bold text-slate-900">Your 14-Level Compensation Tiers</h3>
+                <p className="text-xs text-slate-500">
+                  Criteria configured by Admin. Unlock deeper levels by introducing more direct active agents.
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                {downlineTree?.levelBreakdown ? (
+                  downlineTree.levelBreakdown.map((lvl: any) => (
+                    <div
+                      key={lvl.level}
+                      className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                          <span className="w-8 h-8 rounded-xl bg-indigo-600 text-white font-extrabold text-xs flex items-center justify-center shadow-xs">
+                            L{lvl.level}
+                          </span>
+                          <div>
+                            <h5 className="font-bold text-slate-900 text-xs">{lvl.name}</h5>
+                            <span className="text-[10px] text-slate-500">
+                              Commission: <strong className="text-indigo-700">{lvl.commissionPercent}%</strong> • Joining Bonus: <strong className="text-emerald-700">₹{lvl.fixedBonus}</strong>
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                              lvl.isUnlocked
+                                ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                                : 'bg-amber-100 text-amber-800 border border-amber-200'
+                            }`}
+                          >
+                            {lvl.isUnlocked ? '✓ Unlocked' : `Locked (Need ${lvl.minDirectReferrals} Directs)`}
+                          </span>
+                          <span className="px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-800">
+                            {lvl.membersCount} Member{lvl.membersCount !== 1 ? 's' : ''}
+                          </span>
+                        </div>
+                      </div>
+
+                      {lvl.members?.length > 0 && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 pt-2 border-t border-slate-200/60">
+                          {lvl.members.map((m: any) => (
+                            <div
+                              key={m.agentId}
+                              className="p-2.5 rounded-xl bg-white border border-slate-200 text-xs flex items-center justify-between shadow-2xs"
+                            >
+                              <div>
+                                <span className="font-bold text-slate-900 block">{m.name}</span>
+                                <span className="text-[10px] text-slate-400 font-mono">
+                                  {m.agentId} • {m.mobile}
+                                </span>
+                              </div>
+                              <span className="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md">
+                                {m.branch}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-8 text-center text-slate-400 text-xs">
+                    No downline records loaded yet. Share your referral link to build your team!
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Recent MLM Commission Distributions */}
+            {mlmLogs?.length > 0 && (
+              <div className="bg-white p-6 rounded-3xl border border-slate-200/90 shadow-sm space-y-3">
+                <h4 className="text-sm font-bold text-slate-900">Your Recent Unilevel Commission Credits</h4>
+                <div className="space-y-2">
+                  {mlmLogs.map((log: any) => (
+                    <div
+                      key={log._id || log.transactionId}
+                      className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between text-xs"
+                    >
+                      <div>
+                        <span className="font-bold text-slate-900 block">
+                          Level {log.level} Override from {log.fromAgentName} ({log.eventType})
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-mono">
+                          Tx #{log.transactionId} • {log.date}
+                        </span>
+                      </div>
+                      <span className="font-extrabold text-emerald-700 text-sm">
+                        + ₹ {log.commissionAmount}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
-        </div>
+        )}
+
+        {/* Tab 3: Collections View */}
+        {activeTab === 'collections' && (
+          <div className="bg-white p-6 rounded-3xl border border-slate-200/90 shadow-sm space-y-4">
+            <h3 className="text-base font-bold text-slate-900 tracking-tight flex items-center gap-2">
+              <DollarSign className="w-5 h-5 text-emerald-600" />
+              <span>Recent Agent Collection Receipts</span>
+            </h3>
+
+            <div className="space-y-2 text-xs">
+              {collections.length === 0 ? (
+                <p className="py-8 text-center text-slate-400 italic">No collections recorded yet.</p>
+              ) : (
+                collections.map((col) => (
+                  <div
+                    key={col.id}
+                    className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-100"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs">
+                        ✓
+                      </div>
+                      <div>
+                        <span className="font-bold text-slate-900 block">
+                          {col.customerName} ({col.type})
+                        </span>
+                        <span className="text-[10px] text-slate-500 font-mono">
+                          Receipt #{col.receiptNo} • Mode: {col.mode} • Date: {col.date}
+                        </span>
+                      </div>
+                    </div>
+                    <span className="text-sm font-extrabold text-emerald-700">
+                      + ₹ {col.amount.toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
       </main>
 
       {/* Modal: Agent User Create (Onboard Customer with Documents) */}

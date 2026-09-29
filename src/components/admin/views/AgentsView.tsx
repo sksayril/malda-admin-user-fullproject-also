@@ -72,6 +72,10 @@ export default function AgentsView({
       branch: formData.branch || 'Kolkata HQ',
       status: 'Active',
       referralCode: `AGT-${cleanMob.slice(-4) || '3601'}`,
+      sponsorReferralCode: formData.sponsorReferralCode || '',
+      sponsorAgentId: formData.sponsorAgentId || '',
+      directAgentsCount: 0,
+      totalTeamCount: 0,
       walletBalance: 2500,
       totalCommission: 2500,
       totalDirectCustomers: 0,
@@ -92,6 +96,7 @@ export default function AgentsView({
       password: 'agent123',
       branch: 'Kolkata HQ',
       status: 'Active',
+      sponsorReferralCode: '',
     });
   };
 
@@ -311,6 +316,24 @@ export default function AgentsView({
                     className="w-full px-3 py-2 rounded-xl border border-slate-200 font-mono"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Sponsor Referral Code (Optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. AGT-3601 (Upline Sponsor)"
+                  value={formData.sponsorReferralCode || ''}
+                  onChange={(e) =>
+                    setFormData({ ...formData, sponsorReferralCode: e.target.value.toUpperCase() })
+                  }
+                  className="w-full px-3 py-2 rounded-xl border border-indigo-200 bg-indigo-50/50 uppercase font-mono text-xs font-bold text-indigo-900"
+                />
+                <span className="text-[10px] text-slate-500 mt-0.5 block">
+                  Connects this agent to upline's 14-level unilevel tree.
+                </span>
               </div>
 
               <div>

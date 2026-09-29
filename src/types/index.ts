@@ -59,6 +59,13 @@ export interface Agent {
   branch: string;
   status: 'Active' | 'Inactive';
   referralCode?: string;
+  sponsorAgentId?: string;
+  sponsorReferralCode?: string;
+  upline?: string[];
+  level?: number;
+  directAgentsCount?: number;
+  totalTeamCount?: number;
+  mlmCommissionEarned?: number;
   walletBalance?: number;
   totalCommission?: string | number;
   totalDirectCustomers?: number;
@@ -155,11 +162,49 @@ export interface CollectionRecord {
   date: string;
 }
 
+export interface MlmLevelConfig {
+  id?: string;
+  _id?: string;
+  level: number;
+  name: string;
+  commissionPercent: number;
+  fixedBonus: number;
+  minDirectReferrals: number;
+  minBusinessVolume: number;
+  status: 'Active' | 'Inactive';
+  description?: string;
+  membersCount?: number;
+  totalCommissionPaid?: number;
+}
+
 export interface MlmLevelStat {
   level: number;
+  name?: string;
   members: number;
   commission: number;
+  commissionPercent?: number;
+  fixedBonus?: number;
+  minDirectReferrals?: number;
+  minBusinessVolume?: number;
   status: 'Paid' | 'Pending' | 'Processing';
+}
+
+export interface MlmCommissionLog {
+  id?: string;
+  _id?: string;
+  transactionId: string;
+  fromAgentId: string;
+  fromAgentName: string;
+  toAgentId: string;
+  toAgentName: string;
+  level: number;
+  eventType: 'AGENT_JOIN' | 'CUSTOMER_ONBOARD' | 'COLLECTION' | 'DEPOSIT' | 'LOAN_EMI' | 'MANUAL_PAYOUT';
+  sourceAmount: number;
+  commissionPercent: number;
+  commissionAmount: number;
+  status: 'Credited' | 'Pending' | 'Rejected';
+  notes?: string;
+  date: string;
 }
 
 export interface WhiteLabelPartner {
