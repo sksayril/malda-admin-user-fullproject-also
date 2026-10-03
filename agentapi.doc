@@ -29,7 +29,7 @@
 ## 1. Agent Authentication APIs
 
 ### 1.1 Agent Signup / Registration
-Register a new field agent or financial advisor with personal details, branch assignment, password, and address. Generates unique `agentId` and `referralCode` with welcome wallet bonus.
+Register a new field agent or financial advisor with personal details, branch assignment, password, address, and optional **`sponsorReferralCode`** (the referral code of the upline agent who invited them). Generates unique `agentId` and `referralCode` with welcome wallet bonus and builds the 14-level unilevel compensation tree.
 
 - **Endpoint:** `POST /api/agent/auth/signup`
 - **Headers:** `Content-Type: application/json`
@@ -42,15 +42,17 @@ Register a new field agent or financial advisor with personal details, branch as
   "email": "rakesh.agent@multicredit.com",
   "password": "agent123",
   "branch": "Kolkata HQ",
-  "address": "Park Street, Kolkata, West Bengal"
+  "address": "Park Street, Kolkata, West Bengal",
+  "sponsorReferralCode": "AGT-3601"
 }
 ```
+*(Note: `sponsorReferralCode` can be the sponsor's referral code like `"AGT-3601"` or their Agent ID `"AGT001"`. If provided, this agent is automatically placed under the sponsor's 14-level unilevel downline team).*
 
 #### Response (200 OK):
 ```json
 {
   "success": true,
-  "message": "Agent registered successfully!",
+  "message": "Agent registered successfully with referral network linking!",
   "data": {
     "agent": {
       "agentId": "AGT301",
@@ -59,6 +61,13 @@ Register a new field agent or financial advisor with personal details, branch as
       "email": "rakesh.agent@multicredit.com",
       "branch": "Kolkata HQ",
       "referralCode": "AGT-3210",
+      "sponsorAgentId": "AGT001",
+      "sponsorReferralCode": "AGT-3601",
+      "upline": ["AGT001"],
+      "level": 1,
+      "directAgentsCount": 0,
+      "totalTeamCount": 0,
+      "mlmCommissionEarned": 0,
       "walletBalance": 2500,
       "totalCommission": 2500,
       "totalDirectCustomers": 0,
@@ -66,6 +75,8 @@ Register a new field agent or financial advisor with personal details, branch as
       "online": true,
       "target": "₹ 2,00,000"
     },
+    "sponsorLinked": true,
+    "sponsorId": "AGT001",
     "token": "token_agt_1727240100000"
   }
 }
