@@ -324,6 +324,43 @@ const MlmCommissionLogSchema = new Schema(
   { timestamps: true }
 );
 
+// Payment Transaction Schema (Unified Ledger for Customer Banking & Agent Commission/Collections)
+const PaymentTransactionSchema = new Schema(
+  {
+    transactionId: { type: String, required: true, unique: true, index: true },
+    userId: { type: String, index: true }, // customerId
+    agentId: { type: String, index: true }, // agentId
+    userType: { type: String, enum: ['Customer', 'Agent', 'Both'], default: 'Customer' },
+    userName: { type: String, default: '' },
+    agentName: { type: String, default: '' },
+    type: { type: String, required: true }, // e.g. 'Savings Deposit', 'Loan EMI Payment', 'RD Renewal', 'Agent Commission Payout'
+    category: {
+      type: String,
+      enum: ['DEPOSIT', 'WITHDRAWAL', 'LOAN_EMI', 'RENEWAL', 'COMMISSION', 'PAYOUT', 'COLLECTION'],
+      required: true,
+    },
+    flow: { type: String, enum: ['CREDIT', 'DEBIT'], required: true },
+    amount: { type: Number, required: true },
+    balanceAfter: { type: Number, default: 0 },
+    paymentMode: {
+      type: String,
+      enum: ['UPI', 'Cash', 'Bank Transfer', 'Razorpay', 'Wallet'],
+      default: 'UPI',
+    },
+    status: {
+      type: String,
+      enum: ['Success', 'Pending', 'Failed', 'Refunded'],
+      default: 'Success',
+    },
+    referenceAccount: { type: String, default: '' },
+    receiptNo: { type: String, default: '' },
+    notes: { type: String, default: '' },
+    date: { type: String, required: true },
+    tenantId: { type: String, default: 'TNT001', index: true },
+  },
+  { timestamps: true }
+);
+
 // Export Mongoose Models (re-use if already compiled in Next.js hot reload)
 export const User = models.User || model('User', UserSchema);
 export const Society = models.Society || model('Society', SocietySchema);
@@ -339,5 +376,7 @@ export const ProductSchemeModel = models.ProductScheme || model('ProductScheme',
 export const GatewaySettingsModel = models.GatewaySettings || model('GatewaySettings', GatewaySettingsSchema);
 export const MlmLevelConfig = models.MlmLevelConfig || model('MlmLevelConfig', MlmLevelConfigSchema);
 export const MlmCommissionLog = models.MlmCommissionLog || model('MlmCommissionLog', MlmCommissionLogSchema);
+export const PaymentTransactionModel =
+  models.PaymentTransaction || model('PaymentTransaction', PaymentTransactionSchema);
 
 

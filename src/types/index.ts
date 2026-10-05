@@ -254,3 +254,27 @@ export interface GatewaySettings {
   onboardingCommission: number; // ₹250
 }
 
+export interface PaymentTransaction {
+  id?: string;
+  _id?: string;
+  transactionId: string;
+  userId?: string; // customerId or user ID
+  agentId?: string; // agentId or collector ID
+  userType: 'Customer' | 'Agent' | 'Both';
+  userName?: string;
+  agentName?: string;
+  type: string; // 'Savings Deposit' | 'Savings Withdrawal' | 'Loan EMI' | 'RD Deposit' | 'DRD Collection' | 'FD Investment' | 'Commission Payout' | 'ORC Bonus' | 'Referral Incentive' | 'Online Razorpay'
+  category: 'DEPOSIT' | 'WITHDRAWAL' | 'LOAN_EMI' | 'RENEWAL' | 'COMMISSION' | 'PAYOUT' | 'COLLECTION';
+  flow: 'CREDIT' | 'DEBIT';
+  amount: number;
+  balanceAfter?: number;
+  paymentMode: 'UPI' | 'Cash' | 'Bank Transfer' | 'Razorpay' | 'Wallet';
+  status: 'Success' | 'Pending' | 'Failed' | 'Refunded';
+  referenceAccount?: string; // Account No, Loan ID, RD Policy No, Receipt No
+  receiptNo?: string;
+  notes?: string;
+  date: string;
+  createdAt?: string;
+  tenantId?: string;
+}
+

@@ -35,12 +35,13 @@ import {
   GitFork,
   HelpCircle,
 } from 'lucide-react';
-import { Agent, Customer, CollectionRecord } from '@/types';
+import { Agent, Customer, CollectionRecord, PaymentTransaction } from '@/types';
 import AgentSavingsView from '@/components/agent/views/AgentSavingsView';
 import AgentRenewalView from '@/components/agent/views/AgentRenewalView';
 import AgentQueryReportsView from '@/components/agent/views/AgentQueryReportsView';
 import AgentOrcView from '@/components/agent/views/AgentOrcView';
 import AgentProfileChainView from '@/components/agent/views/AgentProfileChainView';
+import AgentPaymentHistoryView from '@/components/agent/views/AgentPaymentHistoryView';
 
 export default function AgentDashboardPage() {
   const router = useRouter();
@@ -50,8 +51,8 @@ export default function AgentDashboardPage() {
   const [downlineTree, setDownlineTree] = useState<any>(null);
   const [mlmLogs, setMlmLogs] = useState<any[]>([]);
 
-  // 5 Main Core Functional Modules from Video Analysis
-  const [mainModule, setMainModule] = useState<'savings' | 'renewal' | 'query' | 'orc' | 'profile'>('savings');
+  // 6 Main Core Functional Modules
+  const [mainModule, setMainModule] = useState<'savings' | 'renewal' | 'query' | 'orc' | 'profile' | 'payments'>('savings');
 
   const [loading, setLoading] = useState(true);
   const [copiedRef, setCopiedRef] = useState(false);
@@ -364,7 +365,7 @@ export default function AgentDashboardPage() {
           </div>
         </div>
 
-        {/* 5 Core Modules Switcher (Tabs) based strictly on Video Functionality */}
+        {/* 6 Core Modules Switcher (Tabs) */}
         <div className="bg-white p-2 rounded-2xl border border-slate-200/90 shadow-xs flex flex-wrap items-center gap-1.5">
           {[
             { key: 'savings', label: '1. Savings Account', icon: PiggyBank },
@@ -372,6 +373,7 @@ export default function AgentDashboardPage() {
             { key: 'query', label: '3. Query Account & Reports', icon: FileText },
             { key: 'orc', label: '4. ORC Commission', icon: TrendingUp },
             { key: 'profile', label: '5. Profile & Chain View', icon: GitFork },
+            { key: 'payments', label: '6. Payment History & Collections', icon: CreditCard },
           ].map((tab) => {
             const Icon = tab.icon;
             const isActive = mainModule === tab.key;
@@ -380,14 +382,14 @@ export default function AgentDashboardPage() {
                 key={tab.key}
                 type="button"
                 onClick={() => setMainModule(tab.key as any)}
-                className={`flex-1 min-w-[170px] py-3 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
+                className={`flex-1 min-w-[150px] py-3 px-3.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
                   isActive
                     ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-md shadow-indigo-500/25'
                     : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                 }`}
               >
-                <Icon className="w-4 h-4" />
-                <span>{tab.label}</span>
+                <Icon className="w-4 h-4 shrink-0" />
+                <span className="truncate">{tab.label}</span>
               </button>
             );
           })}
@@ -412,6 +414,10 @@ export default function AgentDashboardPage() {
         {mainModule === 'orc' && <AgentOrcView agent={agent} />}
 
         {mainModule === 'profile' && <AgentProfileChainView agent={agent} />}
+
+        {mainModule === 'payments' && (
+          <AgentPaymentHistoryView agent={agent} onUpdateWallet={handleUpdateWallet} />
+        )}
       </main>
 
       {/* Confirmation Modal: Are you sure you want to Logout? (From Video) */}

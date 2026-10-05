@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/db';
-import { Agent, Customer, Collection, MlmCommissionLog } from '@/models';
+import { Agent, Customer, Collection, MlmCommissionLog, PaymentTransactionModel } from '@/models';
 import { getAgentDownlineTree } from '@/lib/mlmService';
 
 export async function GET(req: Request) {
@@ -20,6 +20,7 @@ export async function GET(req: Request) {
     let collections: any[] = [];
     let downlineTree: any = null;
     let mlmCommissionLogs: any[] = [];
+    let transactions: any[] = [];
 
     const conn = await connectToDatabase();
     if (conn) {
@@ -51,6 +52,14 @@ export async function GET(req: Request) {
         mlmCommissionLogs = await MlmCommissionLog.find({
           toAgentId: agent.agentId,
         }).sort({ createdAt: -1 }).limit(20).lean();
+
+        // Fetch Payment and Collections Transactions Ledger
+        transactions = await PaymentTransactionModel.find({
+          $or: [
+            { agentId: agent.agentId },
+            { agentName: { $regex: agent.name, $options: 'i' } },
+          ],
+        }).sort({ createdAt: -1 }).limit(50).lean();
       }
     }
 
@@ -79,6 +88,7 @@ export async function GET(req: Request) {
         collections,
         downlineTree,
         mlmCommissionLogs,
+        transactions,
         commissionBreakdown,
       },
     });

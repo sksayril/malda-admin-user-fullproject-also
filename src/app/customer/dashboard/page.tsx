@@ -25,12 +25,14 @@ import {
   RefreshCw,
   Eye,
   X,
+  ChevronRight,
 } from 'lucide-react';
-import { Customer, LoanApplication, DepositAccount, CollectionRecord } from '@/types';
+import { Customer, LoanApplication, DepositAccount, CollectionRecord, PaymentTransaction } from '@/types';
 import VirtualDebitCard from '@/components/customer/VirtualDebitCard';
 import LatePaymentChart from '@/components/customer/LatePaymentChart';
 import InvestmentsSection from '@/components/customer/InvestmentsSection';
 import LoansSection from '@/components/customer/LoansSection';
+import PaymentHistorySection from '@/components/customer/PaymentHistorySection';
 
 export default function CustomerDashboardPage() {
   const router = useRouter();
@@ -38,13 +40,30 @@ export default function CustomerDashboardPage() {
   const [loans, setLoans] = useState<LoanApplication[]>([]);
   const [deposits, setDeposits] = useState<DepositAccount[]>([]);
   const [collections, setCollections] = useState<CollectionRecord[]>([]);
+  const [transactions, setTransactions] = useState<PaymentTransaction[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeView, setActiveView] = useState<'overview' | 'investments' | 'loans' | 'latechart' | 'kyc'>('overview');
+  const [activeView, setActiveView] = useState<'overview' | 'payments' | 'investments' | 'loans' | 'latechart' | 'kyc'>('overview');
 
   // Deposit/Withdraw modal
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
   const [depositAmount, setDepositAmount] = useState(1000);
   const [selectedDocImg, setSelectedDocImg] = useState<{ title: string; url: string } | null>(null);
+
+  const fetchCustomerData = (cust: Customer) => {
+    fetch(`/api/customer/data?customerId=${cust.customerId || cust.mobile}`)
+      .then((r) => r.json())
+      .then((res) => {
+        if (res.success && res.data) {
+          if (res.data.customer) setCustomer(res.data.customer);
+          if (res.data.loans) setLoans(res.data.loans);
+          if (res.data.deposits) setDeposits(res.data.deposits);
+          if (res.data.collections) setCollections(res.data.collections);
+          if (res.data.transactions) setTransactions(res.data.transactions);
+        }
+      })
+      .catch((err) => console.warn('Error loading customer data:', err))
+      .finally(() => setLoading(false));
+  };
 
   useEffect(() => {
     const saved = localStorage.getItem('mc360_customer_session');
@@ -56,20 +75,7 @@ export default function CustomerDashboardPage() {
     try {
       const parsedCustomer: Customer = JSON.parse(saved);
       setCustomer(parsedCustomer);
-
-      // Fetch live data for this customer
-      fetch(`/api/customer/data?customerId=${parsedCustomer.customerId || parsedCustomer.mobile}`)
-        .then((r) => r.json())
-        .then((res) => {
-          if (res.success && res.data) {
-            if (res.data.customer) setCustomer(res.data.customer);
-            if (res.data.loans) setLoans(res.data.loans);
-            if (res.data.deposits) setDeposits(res.data.deposits);
-            if (res.data.collections) setCollections(res.data.collections);
-          }
-        })
-        .catch((err) => console.warn('Error loading customer data:', err))
-        .finally(() => setLoading(false));
+      fetchCustomerData(parsedCustomer);
     } catch (e) {
       console.error(e);
       router.replace('/customer/login');
@@ -243,6 +249,7 @@ export default function CustomerDashboardPage() {
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
             {[
               { id: 'overview', label: 'Overview & Debit Card' },
+              { id: 'payments', label: '💳 Payment History & Passbook' },
               { id: 'investments', label: 'FD / RD / MIS' },
               { id: 'loans', label: 'Loans & Daily Loan' },
               { id: 'latechart', label: 'Late Payment Chart' },
@@ -336,33 +343,44 @@ export default function CustomerDashboardPage() {
 
                 {/* Quick Transaction / Passbook Log */}
                 <div className="bg-white p-5 rounded-3xl border border-slate-200/90 shadow-sm">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">
-                    Recent Collections & Passbook Entries
-                  </h4>
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                      Recent Passbook & Payment Entries
+                    </h4>
+                    <button
+                      onClick={() => setActiveView('payments')}
+                      className="text-xs font-bold text-blue-600 hover:underline flex items-center gap-0.5"
+                    >
+                      <span>View All Passbook</span>
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                   <div className="space-y-2 text-xs">
-                    {collections.length === 0 ? (
+                    {transactions.length === 0 && collections.length === 0 ? (
                       <p className="text-slate-400 py-3 text-center">No recent transaction entries.</p>
                     ) : (
-                      collections.slice(0, 3).map((col) => (
+                      (transactions.length > 0 ? transactions : (collections as any[])).slice(0, 3).map((item: any) => (
                         <div
-                          key={col.id}
+                          key={item.transactionId || item.id}
                           className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-100"
                         >
                           <div className="flex items-center gap-2">
-                            <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs">
-                              ↓
+                            <div className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs ${
+                              item.flow === 'DEBIT' ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'
+                            }`}>
+                              {item.flow === 'DEBIT' ? '↑' : '↓'}
                             </div>
                             <div>
                               <span className="font-bold text-slate-800 block">
-                                {col.type} Payment ({col.receiptNo})
+                                {item.type || 'Payment'} ({item.receiptNo || item.transactionId})
                               </span>
                               <span className="text-[10px] text-slate-500">
-                                {col.date} • By {col.agentName}
+                                {item.date} • {item.paymentMode || 'UPI'} • {item.agentName || 'Agent'}
                               </span>
                             </div>
                           </div>
-                          <span className="font-extrabold text-emerald-700">
-                            + ₹ {col.amount.toLocaleString('en-IN')}
+                          <span className={`font-extrabold ${item.flow === 'DEBIT' ? 'text-rose-700' : 'text-emerald-700'}`}>
+                            {item.flow === 'DEBIT' ? '-' : '+'} ₹ {Number(item.amount).toLocaleString('en-IN')}
                           </span>
                         </div>
                       ))
@@ -388,9 +406,24 @@ export default function CustomerDashboardPage() {
               customerId={customer.customerId}
             />
 
+            {/* Payment History Full Component Preview */}
+            <PaymentHistorySection
+              customer={customer}
+              transactions={transactions}
+              onRefresh={() => fetchCustomerData(customer)}
+            />
+
             {/* Late Payment Penalty Matrix */}
             <LatePaymentChart />
           </div>
+        )}
+
+        {activeView === 'payments' && (
+          <PaymentHistorySection
+            customer={customer}
+            transactions={transactions}
+            onRefresh={() => fetchCustomerData(customer)}
+          />
         )}
 
         {activeView === 'investments' && (

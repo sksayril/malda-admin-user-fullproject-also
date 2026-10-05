@@ -49,6 +49,30 @@ export async function POST(req: Request) {
       }
     }
 
+    // Also record unified PaymentTransaction in database
+    try {
+      const { PaymentTransactionModel } = await import('@/models');
+      await PaymentTransactionModel.create({
+        transactionId: `TXN-COL-${Date.now()}`,
+        userId: body.customerId || '',
+        agentId: body.agentId || '',
+        userType: 'Both',
+        userName: body.customerName || 'Valued Member',
+        agentName: body.agentName || 'Malda HQ Collector',
+        type: `${body.type || 'Field'} Collection`,
+        category: body.type === 'EMI' || body.type === 'Loan' ? 'LOAN_EMI' : 'COLLECTION',
+        flow: 'CREDIT',
+        amount: Number(body.amount) || 0,
+        paymentMode: body.mode || 'Cash',
+        status: 'Success',
+        receiptNo: body.receiptNo || `RC${Math.floor(100 + Math.random() * 900)}`,
+        notes: `Collected by ${body.agentName || 'Agent'}`,
+        date: body.date || new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+      });
+    } catch (txErr) {
+      console.warn('Collection to PaymentTransaction warning:', txErr);
+    }
+
     return NextResponse.json({
       success: true,
       message: 'Collection receipt recorded and commissions distributed',

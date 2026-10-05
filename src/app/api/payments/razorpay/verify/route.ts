@@ -92,6 +92,46 @@ export async function POST(req: Request) {
           date: dateStr,
         });
 
+        // 4.1 Create PaymentTransaction record in DB
+        try {
+          const { PaymentTransactionModel } = await import('@/models');
+          await PaymentTransactionModel.create({
+            transactionId: paymentId || `TXN-RZP-${Date.now()}`,
+            userId: customerId,
+            agentId: linkedAgent?.agentId || '',
+            userType: linkedAgent ? 'Both' : 'Customer',
+            userName: customerName || customer?.name || 'Valued Member',
+            agentName: linkedAgent ? linkedAgent.name : 'Razorpay Online Gateway',
+            type:
+              type === 'DAILY_LOAN'
+                ? 'Daily Loan Installment'
+                : type === 'EMI'
+                ? 'Loan EMI Payment'
+                : type === 'RD'
+                ? 'Recurring Deposit (RD)'
+                : type === 'FD'
+                ? 'Fixed Deposit Investment'
+                : 'Savings Account Deposit',
+            category:
+              type === 'DAILY_LOAN' || type === 'EMI'
+                ? 'LOAN_EMI'
+                : type === 'RD'
+                ? 'RENEWAL'
+                : 'DEPOSIT',
+            flow: 'CREDIT',
+            amount: payAmount,
+            balanceAfter: customer?.savingsBalance || 0,
+            paymentMode: 'Razorpay',
+            status: 'Success',
+            referenceAccount: loanId || accountId || receiptNo,
+            receiptNo,
+            notes: `Online Razorpay Payment (${paymentId})`,
+            date: dateStr,
+          });
+        } catch (txErr) {
+          console.warn('PaymentTransaction creation warning:', txErr);
+        }
+
         // 5. Calculate and credit commission to Agent Wallet automatically!
         let commissionAmount = 0;
         if (linkedAgent) {

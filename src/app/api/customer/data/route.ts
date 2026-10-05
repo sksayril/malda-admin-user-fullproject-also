@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/db';
-import { Customer, LoanApplicationModel, Deposit, Collection } from '@/models';
+import { Customer, LoanApplicationModel, Deposit, Collection, PaymentTransactionModel } from '@/models';
 
 export async function GET(req: Request) {
   try {
@@ -18,6 +18,7 @@ export async function GET(req: Request) {
     let loans: any[] = [];
     let deposits: any[] = [];
     let collections: any[] = [];
+    let transactions: any[] = [];
 
     const conn = await connectToDatabase();
     if (conn) {
@@ -42,6 +43,13 @@ export async function GET(req: Request) {
         collections = await Collection.find({
           $or: [{ customerId: customer.customerId }, { customerName: customer.name }],
         }).sort({ createdAt: -1 }).lean();
+
+        transactions = await PaymentTransactionModel.find({
+          $or: [
+            { userId: customer.customerId },
+            { userName: { $regex: customer.name, $options: 'i' } },
+          ],
+        }).sort({ createdAt: -1 }).limit(50).lean();
       }
     }
 
@@ -95,6 +103,7 @@ export async function GET(req: Request) {
         loans,
         deposits,
         collections,
+        transactions,
         latePaymentChart,
       },
     });
