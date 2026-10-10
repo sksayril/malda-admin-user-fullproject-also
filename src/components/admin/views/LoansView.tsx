@@ -26,14 +26,20 @@ export default function LoansView({ loans, onSelectLoan, onAddLoan }: LoansViewP
     interestRate: 12,
   });
 
-  const tabs = ['All', 'Pending', 'Approved', 'Disbursed', 'Rejected'];
+  const tabs = ['All', 'Daily Loans', 'Pending', 'Approved', 'Disbursed', 'Rejected'];
 
   const filtered = loans.filter((loan) => {
-    const matchesTab = activeTab === 'All' || loan.status === activeTab;
+    const matchesTab =
+      activeTab === 'All'
+        ? true
+        : activeTab === 'Daily Loans'
+        ? loan.isDailyLoan || loan.loanType === 'Daily Loan'
+        : loan.status === activeTab;
     const matchesSearch =
       loan.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       loan.loanId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      loan.loanType.toLowerCase().includes(searchTerm.toLowerCase());
+      loan.loanType.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (loan.agentName && loan.agentName.toLowerCase().includes(searchTerm.toLowerCase()));
     return matchesTab && matchesSearch;
   });
 
@@ -137,8 +143,9 @@ export default function LoansView({ loans, onSelectLoan, onAddLoan }: LoansViewP
               <tr>
                 <th className="py-3.5 px-4">Loan ID</th>
                 <th className="py-3.5 px-4">Customer</th>
-                <th className="py-3.5 px-4">Amount</th>
-                <th className="py-3.5 px-4 text-center">Status</th>
+                <th className="py-3.5 px-4">Collector Agent</th>
+                <th className="py-3.5 px-4">Amount & EMI</th>
+                <th className="py-3.5 px-4 text-center">Status / Progress</th>
                 <th className="py-3.5 px-4">Date</th>
                 <th className="py-3.5 px-4 text-right">Actions</th>
               </tr>
@@ -155,8 +162,17 @@ export default function LoansView({ loans, onSelectLoan, onAddLoan }: LoansViewP
                     <div>{loan.customerName}</div>
                     <span className="text-[10px] text-slate-400 font-normal">{loan.loanType}</span>
                   </td>
-                  <td className="py-3.5 px-4 font-bold text-slate-900">
-                    ₹ {loan.amount.toLocaleString()}
+                  <td className="py-3.5 px-4 text-slate-700">
+                    <div className="font-semibold">{loan.agentName || 'Malda HQ Team'}</div>
+                    <span className="text-[10px] text-slate-400 font-mono">{loan.agentId || 'Direct'}</span>
+                  </td>
+                  <td className="py-3.5 px-4">
+                    <div className="font-bold text-slate-900">₹ {loan.amount.toLocaleString()}</div>
+                    <span className="text-[10px] text-slate-500">
+                      {loan.isDailyLoan
+                        ? `₹${loan.dailyInstallment}/day`
+                        : `₹${loan.monthlyEmi?.toLocaleString()}/mo`}
+                    </span>
                   </td>
                   <td className="py-3.5 px-4 text-center">
                     <span
@@ -166,6 +182,16 @@ export default function LoansView({ loans, onSelectLoan, onAddLoan }: LoansViewP
                     >
                       {loan.status}
                     </span>
+                    {loan.isDailyLoan && (
+                      <div className="text-[10px] text-slate-500 mt-1">
+                        {loan.daysPaid || 0} / {loan.daysTotal || 100} Days
+                        {(loan.missedDays || 0) > 0 && (
+                          <span className="block text-amber-700 font-bold">
+                            ⚠️ Overdue ₹{loan.carryForwardDue}
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </td>
                   <td className="py-3.5 px-4 text-slate-500">{loan.appliedDate}</td>
                   <td className="py-3.5 px-4 text-right" onClick={(e) => e.stopPropagation()}>

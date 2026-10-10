@@ -117,12 +117,17 @@ export interface LoanApplication {
   loanId: string;
   customerName: string;
   customerId: string;
+  agentId?: string;
+  agentName?: string;
+  agentReferralCode?: string;
   loanType: 'Personal Loan' | 'Business Loan' | 'Emergency Loan' | 'Small Loan' | 'Daily Loan';
   amount: number;
   tenureMonths: number;
   interestRate: number;
   monthlyEmi: number;
   appliedDate: string;
+  disbursedDate?: string;
+  lastPaymentDate?: string;
   status: LoanStatus;
   step: 'Application' | 'Documents' | 'Verification' | 'Approval' | 'Disbursement';
   paidEmis?: number;
@@ -131,7 +136,14 @@ export interface LoanApplication {
   isDailyLoan?: boolean;
   dailyInstallment?: number;
   daysTotal?: number;
+  dailyTenureDays?: number;
   daysPaid?: number;
+  carryForwardDue?: number;
+  missedDays?: number;
+  todayDue?: number;
+  totalPayable?: number;
+  totalCollected?: number;
+  balanceRemaining?: number;
 }
 
 export interface DepositAccount {
@@ -156,9 +168,13 @@ export interface CollectionRecord {
   customerName: string;
   customerId: string;
   agentName: string;
-  type: 'EMI' | 'RD' | 'Loan' | 'MIS' | 'FD';
+  agentId?: string;
+  loanId?: string;
+  type: 'EMI' | 'RD' | 'Loan' | 'MIS' | 'FD' | 'DAILY_LOAN' | 'DRD';
   amount: number;
-  mode: 'UPI' | 'Cash' | 'Bank';
+  mode: 'UPI' | 'Cash' | 'Bank' | 'Wallet';
+  daysPaidCount?: number;
+  carryForwardSettled?: number;
   date: string;
 }
 

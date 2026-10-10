@@ -98,9 +98,10 @@ export default function LoansSection({
     setIsModalOpen(false);
   };
 
-  // Pay daily loan installment via Razorpay
-  const handlePayDailyInstallment = async (dLoan: LoanApplication) => {
+  // Pay daily loan installment via Razorpay (single day or full carry forward)
+  const handlePayDailyInstallment = async (dLoan: LoanApplication, payFullDue: boolean = false) => {
     const dailyEmi = dLoan.dailyInstallment || Math.round((dLoan.amount * 1.1) / 100);
+    const amountToPay = payFullDue ? (dLoan.todayDue || dailyEmi) : dailyEmi;
     setIsPayingDaily(dLoan.loanId);
 
     try {
@@ -112,7 +113,7 @@ export default function LoansSection({
           orderId: `order_daily_${Date.now()}`,
           customerId,
           customerName,
-          amount: dailyEmi,
+          amount: amountToPay,
           type: 'DAILY_LOAN',
           schemeCode: 'SCH-LN-DAILY',
           loanId: dLoan.loanId,
@@ -120,8 +121,16 @@ export default function LoansSection({
       });
       const data = await verifyRes.json();
       if (data.success) {
-        alert(`✓ Razorpay Payment Verified! Receipt #${data.data.receiptNo} generated for ₹${dailyEmi}. Agent commission credited automatically!`);
-        dLoan.daysPaid = (dLoan.daysPaid || 0) + 1;
+        const daysCovered = Math.max(1, Math.floor(amountToPay / dailyEmi));
+        alert(
+          `✓ Razorpay Payment Verified! Receipt #${data.data.receiptNo} generated for ₹${amountToPay}. Credited ${daysCovered} day(s) EMI. Agent commission credited automatically!`
+        );
+        dLoan.daysPaid = (dLoan.daysPaid || 0) + daysCovered;
+        if (payFullDue) {
+          dLoan.carryForwardDue = 0;
+          dLoan.missedDays = 0;
+          dLoan.todayDue = dailyEmi;
+        }
       }
     } catch (err) {
       console.warn(err);
@@ -149,7 +158,7 @@ export default function LoansSection({
                 </span>
               </div>
               <p className="text-xs text-slate-600">
-                Admin approved 100-day doorstep daily collection scheme with Razorpay auto-pay
+                Admin approved 100-day doorstep daily collection scheme with Razorpay auto-pay and automated carry-forward
               </p>
             </div>
           </div>
@@ -177,11 +186,14 @@ export default function LoansSection({
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {dailyLoans.map((dLoan) => {
-              const daysPaid = dLoan.daysPaid || 28;
+              const daysPaid = dLoan.daysPaid || 0;
               const daysTotal = dLoan.daysTotal || 100;
               const percentage = Math.min(100, Math.round((daysPaid / daysTotal) * 100));
               const dailyEmi = dLoan.dailyInstallment || Math.round((dLoan.amount * 1.1) / 100);
               const balanceRemaining = Math.max(0, (daysTotal - daysPaid) * dailyEmi);
+              const missedDays = dLoan.missedDays || 0;
+              const carryForwardDue = dLoan.carryForwardDue || (missedDays * dailyEmi);
+              const todayDue = dLoan.todayDue || (carryForwardDue + dailyEmi);
 
               return (
                 <div
@@ -211,6 +223,23 @@ export default function LoansSection({
                       </div>
                     </div>
 
+                    {/* Carry-Forward Overdue Alert */}
+                    {missedDays > 0 ? (
+                      <div className="bg-amber-100 border border-amber-300 rounded-xl p-2.5 text-xs text-amber-900 mb-3 space-y-1">
+                        <div className="flex items-center gap-1.5 font-bold">
+                          <span>⚠️ {missedDays} Missed Days Carry-Forward Overdue!</span>
+                        </div>
+                        <div className="text-[11px] text-amber-800 flex justify-between">
+                          <span>Overdue: ₹{carryForwardDue} + Today: ₹{dailyEmi}</span>
+                          <strong className="text-amber-950 font-black">Total Due: ₹{todayDue}</strong>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-2 text-[11px] text-emerald-800 font-semibold mb-3">
+                        ✓ All previous daily dues cleared! Today's installment: ₹{dailyEmi}
+                      </div>
+                    )}
+
                     {/* Progress Bar */}
                     <div className="space-y-1.5 mt-2">
                       <div className="flex items-center justify-between text-[11px] font-semibold text-slate-600">
@@ -226,17 +255,30 @@ export default function LoansSection({
                     </div>
                   </div>
 
-                  <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px]">
-                    <span className="text-slate-500">Collected Daily by Agent / Razorpay</span>
-                    <button
-                      type="button"
-                      disabled={isPayingDaily === dLoan.loanId}
-                      onClick={() => handlePayDailyInstallment(dLoan)}
-                      className="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl transition flex items-center gap-1 cursor-pointer shadow-xs"
-                    >
-                      <CreditCard className="w-3.5 h-3.5" />
-                      <span>{isPayingDaily === dLoan.loanId ? 'Processing...' : `Pay Today ₹${dailyEmi}`}</span>
-                    </button>
+                  <div className="mt-4 pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+                    <span className="text-slate-500">Collected by Agent or Online Razorpay</span>
+                    <div className="flex items-center gap-2">
+                      {missedDays > 0 && (
+                        <button
+                          type="button"
+                          disabled={isPayingDaily === dLoan.loanId}
+                          onClick={() => handlePayDailyInstallment(dLoan, true)}
+                          className="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-extrabold rounded-xl transition flex items-center gap-1 cursor-pointer shadow-xs"
+                        >
+                          <CreditCard className="w-3.5 h-3.5" />
+                          <span>Pay Total ₹{todayDue}</span>
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        disabled={isPayingDaily === dLoan.loanId}
+                        onClick={() => handlePayDailyInstallment(dLoan, false)}
+                        className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl transition flex items-center gap-1 cursor-pointer shadow-xs"
+                      >
+                        <CreditCard className="w-3.5 h-3.5" />
+                        <span>{isPayingDaily === dLoan.loanId ? 'Processing...' : `Pay Today ₹${dailyEmi}`}</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               );

@@ -124,6 +124,7 @@ export default function CollectionsView({
               <tr>
                 <th className="py-3.5 px-4">Receipt No</th>
                 <th className="py-3.5 px-4">Customer</th>
+                <th className="py-3.5 px-4">Agent / Collector</th>
                 <th className="py-3.5 px-4">Type</th>
                 <th className="py-3.5 px-4">Amount</th>
                 <th className="py-3.5 px-4 text-center">Mode</th>
@@ -135,9 +136,16 @@ export default function CollectionsView({
                 <tr key={item.id} className="hover:bg-slate-50/80 transition">
                   <td className="py-3.5 px-4 font-bold text-blue-600">{item.receiptNo}</td>
                   <td className="py-3.5 px-4 font-semibold text-slate-900">{item.customerName}</td>
+                  <td className="py-3.5 px-4 text-slate-600 font-medium">{item.agentName || 'Malda HQ Collector'}</td>
                   <td className="py-3.5 px-4">
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
-                      {item.type}
+                    <span
+                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                        item.type === 'DAILY_LOAN'
+                          ? 'bg-amber-100 text-amber-800 border border-amber-300'
+                          : 'bg-blue-50 text-blue-700 border border-blue-200'
+                      }`}
+                    >
+                      {item.type === 'DAILY_LOAN' ? 'Daily Loan EMI' : item.type}
                     </span>
                   </td>
                   <td className="py-3.5 px-4 font-bold text-slate-900">

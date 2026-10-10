@@ -68,14 +68,23 @@ export async function POST(req: Request) {
         // 3. If it's a Loan EMI or Daily Loan, update paid installments
         if (loanId) {
           if (type === 'DAILY_LOAN') {
+            const foundLoan = await LoanApplicationModel.findOne({ loanId });
+            const inst = foundLoan?.dailyInstallment || payAmount;
+            const daysCount = Math.max(1, Math.floor(payAmount / inst));
             await LoanApplicationModel.updateOne(
               { loanId },
-              { $inc: { daysPaid: 1 } }
+              {
+                $inc: { daysPaid: daysCount, totalCollected: payAmount },
+                $set: { lastPaymentDate: dateStr },
+              }
             );
           } else {
             await LoanApplicationModel.updateOne(
               { loanId },
-              { $inc: { paidEmis: 1 } }
+              {
+                $inc: { paidEmis: 1, totalCollected: payAmount },
+                $set: { lastPaymentDate: dateStr },
+              }
             );
           }
         }
